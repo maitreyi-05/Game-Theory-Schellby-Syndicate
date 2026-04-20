@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEFCON: The Blackmail Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Share+Tech+Mono&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07080f;--bg2:#0d1120;--bg3:#111828;--bg4:#161e30;
+  --border:#1c2a3a;--border2:#243850;
+  --text:#EEF2FF;--text2:#B8CCEE;--text3:#6a90b8;--text4:#304560;
+  --acc:#B388FF;--acc2:#9C64FF;--acc3:#D4BBFF;
+  --gold:#FFD740;--gold2:#FFC107;
+  --red:#FF5252;--red2:#FF1744;--red3:#FF8A80;
+  --green:#69FF47;--green2:#00E676;
+  --cyan:#00E5FF;
+  --font-h:'Barlow Condensed',sans-serif;
+  --font-b:'Barlow',sans-serif;
+  --font-m:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+button{cursor:pointer;font-family:var(--font-h)}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
+
+/* ══════ INTRO SCREEN ══════ */
+#s-intro{align-items:center;justify-content:center;text-align:center;padding:2rem;background:radial-gradient(ellipse at 50% 30%,#1a0f3a 0%,var(--bg) 70%)}
+.intro-eyebrow{font-family:var(--font-m);font-size:11px;letter-spacing:.3em;color:var(--acc3);margin-bottom:1rem}
+.intro-title{font-family:var(--font-h);font-size:clamp(3rem,10vw,6.5rem);font-weight:800;line-height:.95;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.5rem}
+.intro-title span{color:var(--acc)}
+.intro-sub{font-family:var(--font-b);font-size:17px;color:var(--text2);margin-bottom:2.5rem;font-style:italic}
+.role-pick{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem}
+.role-btn{background:var(--bg3);border:2px solid var(--border2);border-radius:10px;padding:1.2rem 2rem;min-width:200px;transition:all .2s;text-align:left}
+.role-btn:hover,.role-btn.sel{border-color:var(--acc);background:rgba(179,136,255,.1)}
+.role-btn .rb-tag{font-family:var(--font-m);font-size:10px;color:var(--acc3);letter-spacing:.15em;margin-bottom:5px}
+.role-btn .rb-name{font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--text);letter-spacing:.05em;text-transform:uppercase}
+.role-btn .rb-desc{font-size:13px;color:var(--text3);margin-top:4px;line-height:1.5}
+.diff-row{display:flex;gap:.6rem;justify-content:center;margin-bottom:2rem}
+.diff-btn{font-family:var(--font-m);font-size:11px;padding:7px 18px;border-radius:4px;border:1.5px solid var(--border2);background:transparent;color:var(--text3);letter-spacing:.1em;transition:all .2s}
+.diff-btn:hover,.diff-btn.sel{border-color:var(--gold);color:var(--gold);background:rgba(255,215,64,.08)}
+.start-btn{font-family:var(--font-h);font-size:22px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:1rem 3.5rem;border:2px solid var(--acc);background:rgba(179,136,255,.15);color:var(--acc3);border-radius:8px;transition:all .2s}
+.start-btn:hover{background:var(--acc);color:var(--bg)}
+
+/* ══════ GAME SCREEN ══════ */
+#s-game{flex-direction:row;height:100vh;overflow:hidden}
+
+/* ── HUD (left panel) ── */
+.hud{width:260px;flex-shrink:0;background:var(--bg2);border-right:1.5px solid var(--border);display:flex;flex-direction:column;padding:1.1rem;gap:.8rem;overflow-y:auto}
+.hud-title{font-family:var(--font-m);font-size:10px;letter-spacing:.22em;color:var(--acc3);text-transform:uppercase;margin-bottom:2px}
+.hud-val{font-family:var(--font-h);font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.hud-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.hud-block{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:.85rem 1rem}
+.hud-divider{height:1px;background:var(--border);margin:.2rem 0}
+
+/* stat bar */
+.stat-bar-wrap{margin-top:6px}
+.stat-bar-label{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:10.5px;color:var(--text3);margin-bottom:4px}
+.stat-bar-track{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.stat-bar-fill{height:6px;border-radius:3px;transition:width .5s}
+
+/* faction indicators */
+.faction-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+.faction-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.faction-name{font-size:13px;color:var(--text2);font-weight:600}
+.faction-stance{font-family:var(--font-m);font-size:10px;margin-left:auto}
+
+/* turn log */
+.turn-log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.log-entry{font-size:12px;color:var(--text3);line-height:1.5;padding:5px 8px;background:var(--bg4);border-radius:4px;border-left:2px solid var(--border2)}
+.log-entry.ev-warn{border-left-color:var(--red);color:var(--red3)}
+.log-entry.ev-good{border-left-color:var(--green2);color:var(--green)}
+.log-entry.ev-info{border-left-color:var(--acc);color:var(--acc3)}
+
+/* ── MAIN AREA ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.top-bar{background:var(--bg2);border-bottom:1.5px solid var(--border);padding:.7rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.top-bar-left{font-family:var(--font-m);font-size:11px;color:var(--text3);letter-spacing:.1em}
+.top-bar-right{display:flex;gap:1rem;align-items:center}
+.phase-badge{font-family:var(--font-m);font-size:10px;padding:4px 10px;border-radius:3px;border:1.5px solid var(--acc);color:var(--acc);background:rgba(179,136,255,.1);letter-spacing:.1em}
+.tension-wrap{display:flex;align-items:center;gap:8px;font-family:var(--font-m);font-size:11px;color:var(--text3)}
+.tension-track{width:120px;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.tension-fill{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--green2),var(--gold),var(--red));transition:width .4s}
+
+/* ── STAGE AREA ── */
+.stage-area{flex:1;display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto}
+.stage-card{background:var(--bg2);border:1.5px solid var(--border2);border-radius:14px;padding:2rem 2.2rem;max-width:640px;width:100%}
+.stage-eyebrow{font-family:var(--font-m);font-size:10px;letter-spacing:.22em;color:var(--text4);text-transform:uppercase;margin-bottom:.4rem}
+.stage-title{font-family:var(--font-h);font-size:2rem;font-weight:800;color:var(--text);letter-spacing:.04em;text-transform:uppercase;margin-bottom:.8rem}
+.stage-body{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:1.5rem}
+.stage-body strong{color:var(--text);font-weight:600}
+.choices{display:flex;flex-direction:column;gap:.7rem}
+.choice-btn{background:var(--bg3);border:1.5px solid var(--border2);border-radius:9px;padding:1rem 1.3rem;text-align:left;transition:all .18s;position:relative;overflow:hidden}
+.choice-btn:hover{border-color:var(--acc);background:rgba(179,136,255,.08)}
+.choice-btn .ch-tag{font-family:var(--font-m);font-size:9.5px;letter-spacing:.15em;margin-bottom:4px}
+.choice-btn .ch-title{font-family:var(--font-h);font-size:17px;font-weight:700;color:var(--text);letter-spacing:.04em;text-transform:uppercase}
+.choice-btn .ch-desc{font-size:13px;color:var(--text3);margin-top:3px;line-height:1.5}
+.choice-btn .ch-cost{font-family:var(--font-m);font-size:11px;margin-top:6px;color:var(--text4)}
+.ch-agg{border-color:rgba(255,82,82,.4)!important}.ch-agg .ch-tag{color:var(--red3)}.ch-agg:hover{border-color:var(--red)!important;background:rgba(255,82,82,.08)!important}
+.ch-dip{border-color:rgba(0,230,118,.3)!important}.ch-dip .ch-tag{color:var(--green2)}.ch-dip:hover{border-color:var(--green2)!important;background:rgba(0,230,118,.08)!important}
+.ch-int{border-color:rgba(0,229,255,.3)!important}.ch-int .ch-tag{color:var(--cyan)}.ch-int:hover{border-color:var(--cyan)!important;background:rgba(0,229,255,.08)!important}
+
+/* event overlay */
+.event-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:100;padding:2rem}
+.event-card{background:var(--bg2);border:2px solid var(--border2);border-radius:14px;padding:2rem 2.2rem;max-width:520px;width:100%;text-align:center}
+.event-icon{font-size:3rem;margin-bottom:.7rem}
+.event-title{font-family:var(--font-h);font-size:2rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem}
+.event-body{font-size:15px;color:var(--text2);line-height:1.7;margin-bottom:1.5rem}
+.event-ok{font-family:var(--font-h);font-size:17px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:.75rem 2.5rem;border:2px solid var(--acc);background:rgba(179,136,255,.15);color:var(--acc3);border-radius:7px;transition:all .2s}
+.event-ok:hover{background:var(--acc);color:var(--bg)}
+
+/* end screen */
+#s-end{align-items:center;justify-content:center;text-align:center;padding:2rem;background:radial-gradient(ellipse at 50% 30%,#1a0f3a 0%,var(--bg) 70%)}
+.end-tag{font-family:var(--font-m);font-size:11px;letter-spacing:.25em;color:var(--text3);margin-bottom:.5rem}
+.end-title{font-family:var(--font-h);font-size:clamp(2.5rem,8vw,5rem);font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem}
+.end-body{font-size:16px;color:var(--text2);max-width:480px;margin:0 auto 1.5rem;line-height:1.75}
+.score-display{font-family:var(--font-m);font-size:4rem;font-weight:700;margin:.5rem 0;letter-spacing:.05em}
+.end-stats{display:flex;gap:1.5rem;justify-content:center;margin-bottom:2rem;flex-wrap:wrap}
+.end-stat{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:.75rem 1.3rem;min-width:120px}
+.end-stat .es-val{font-family:var(--font-m);font-size:1.6rem;font-weight:700;color:var(--text)}
+.end-stat .es-lbl{font-size:12px;color:var(--text3);margin-top:3px}
+.replay-btn{font-family:var(--font-h);font-size:20px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:.9rem 3rem;border:2px solid var(--acc);background:rgba(179,136,255,.15);color:var(--acc3);border-radius:8px;transition:all .2s}
+.replay-btn:hover{background:var(--acc);color:var(--bg)}
+
+@media(max-width:700px){
+  #s-game{flex-direction:column}
+  .hud{width:100%;flex-direction:row;flex-wrap:wrap;height:auto;overflow-x:auto;padding:.7rem;gap:.5rem}
+  .hud-block{flex:1;min-width:140px}
+  .turn-log{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ INTRO ══════════════════ -->
+<div id="s-intro" class="screen active">
+  <div class="intro-eyebrow">// Ellsberg 1968 · Schellby Syndicate · Game Theory</div>
+  <div class="intro-title">DEFCON:<br><span>Blackmail</span></div>
+  <div class="intro-sub">You're at the table. Every move has a cost.</div>
+
+  <div style="font-family:var(--font-m);font-size:10.5px;color:var(--text3);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.8rem">Choose Your Faction</div>
+  <div class="role-pick" id="role-pick">
+    <button class="role-btn" data-role="iran" onclick="selectRole(this)">
+      <div class="rb-tag">FACTION 01 · FIRST MOVER</div>
+      <div class="rb-name">🇮🇷 Iran</div>
+      <div class="rb-desc">Threaten, bluff, and coerce. Make the USA back down — but every move risks war.</div>
+    </button>
+    <button class="role-btn" data-role="usa" onclick="selectRole(this)">
+      <div class="rb-tag">FACTION 02 · RESPONDER</div>
+      <div class="rb-name">🇺🇸 USA</div>
+      <div class="rb-desc">Resist, negotiate, or comply. Read Iran's resolve before it's too late.</div>
+    </button>
+  </div>
+
+  <div style="font-family:var(--font-m);font-size:10.5px;color:var(--text3);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.6rem">Difficulty</div>
+  <div class="diff-row" id="diff-row">
+    <button class="diff-btn" data-diff="easy" onclick="selectDiff(this)">ANALYST</button>
+    <button class="diff-btn sel" data-diff="normal" onclick="selectDiff(this)">OPERATIVE</button>
+    <button class="diff-btn" data-diff="hard" onclick="selectDiff(this)">DIRECTOR</button>
+  </div>
+
+  <button class="start-btn" onclick="startGame()">DEPLOY ▶</button>
+</div>
+
+<!-- ══════════════════ GAME ══════════════════ -->
+<div id="s-game" class="screen">
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-block">
+      <div class="hud-title">Playing As</div>
+      <div class="hud-val" id="hud-role">—</div>
+      <div class="hud-sub" id="hud-diff">—</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-title">Score</div>
+      <div class="hud-val" id="hud-score">0</div>
+      <div class="hud-sub">influence points</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-title">Round</div>
+      <div class="hud-val" id="hud-round">1 / 5</div>
+      <div class="hud-sub">of campaign</div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-block">
+      <div class="hud-title">Resolve</div>
+      <div class="stat-bar-wrap">
+        <div class="stat-bar-label"><span>Your resolve</span><span id="lbl-resolve">50</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" id="bar-resolve" style="width:50%;background:var(--acc)"></div></div>
+      </div>
+      <div class="stat-bar-wrap" style="margin-top:8px">
+        <div class="stat-bar-label"><span>Opponent resolve</span><span id="lbl-opp-resolve">50</span></div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" id="bar-opp-resolve" style="width:50%;background:var(--red)"></div></div>
+      </div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-title">Bloc Support</div>
+      <div class="faction-row">
+        <div class="faction-dot" style="background:var(--green2)"></div>
+        <div class="faction-name">Energy Bloc</div>
+        <div class="faction-stance" id="lbl-energy" style="color:var(--green2)">+a</div>
+      </div>
+      <div class="faction-row">
+        <div class="faction-dot" style="background:var(--gold)"></div>
+        <div class="faction-name">Rival Bloc</div>
+        <div class="faction-stance" id="lbl-rival" style="color:var(--gold)">+B</div>
+      </div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-title">Event Log</div>
+    <div class="turn-log" id="turn-log"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="top-bar">
+      <div class="top-bar-left">DEFCON: THE BLACKMAIL GAME &nbsp;·&nbsp; SCHELLBY SYNDICATE</div>
+      <div class="top-bar-right">
+        <div class="tension-wrap">
+          TENSION
+          <div class="tension-track"><div class="tension-fill" id="tension-fill" style="width:20%"></div></div>
+          <span id="tension-lbl">LOW</span>
+        </div>
+        <div class="phase-badge" id="phase-badge">STAGE 0</div>
+      </div>
+    </div>
+    <div class="stage-area" id="stage-area">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ END ══════════════════ -->
+<div id="s-end" class="screen">
+  <div class="end-tag">// Campaign Complete · Schellby Syndicate</div>
+  <div class="end-title" id="end-title">—</div>
+  <div class="score-display" id="end-score">0</div>
+  <div class="end-body" id="end-body">—</div>
+  <div class="end-stats" id="end-stats"></div>
+  <button class="replay-btn" onclick="replay()">↩ PLAY AGAIN</button>
+</div>
+
+<!-- EVENT OVERLAY -->
+<div class="event-overlay" id="event-overlay" style="display:none">
+  <div class="event-card">
+    <div class="event-icon" id="ev-icon">⚡</div>
+    <div class="event-title" id="ev-title">—</div>
+    <div class="event-body" id="ev-body">—</div>
+    <button class="event-ok" onclick="closeEvent()">ACKNOWLEDGED</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+const G = {
+  role:'iran', diff:'normal',
+  score:0, round:1, maxRounds:5,
+  resolve:50, oppResolve:50,
+  tension:20,
+  a:2, B:1.5,
+  history:[],
+  stats:{threats:0,complies:0,wars:0,coops:0}
+};
+
+let eventQueue=[], eventCallback=null;
+
+// ══════════════════════════════════════════════
+// INTRO
+// ══════════════════════════════════════════════
+function selectRole(btn){
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  G.role=btn.dataset.role;
+}
+function selectDiff(btn){
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  G.diff=btn.dataset.diff;
+}
+function startGame(){
+  if(!document.querySelector('.role-btn.sel')){showEvent('⚠️','Choose a Faction','Pick Iran or USA before deploying.',null);return;}
+  if(G.diff==='easy'){G.a=3;G.B=0.8;}
+  else if(G.diff==='normal'){G.a=2;G.B=1.5;}
+  else{G.a=1.2;G.B=2.5;}
+  rounds=getRounds();
+  currentRound=0;
+  show('s-game');
+  updateHUD();
+  renderRound();
+}
+
+// ══════════════════════════════════════════════
+// ROUNDS — content
+// ══════════════════════════════════════════════
+function getRounds(){
+  if(G.role==='iran') return iranRounds();
+  return usaRounds();
+}
+
+function iranRounds(){
+  return [
+    {
+      stage:'STAGE 0 · BLOCS',phase:'Stage 0',
+      title:'Secure Your Backing',
+      body:'Before making any move, you need to know who\'s in your corner. The <strong>Rival Bloc (China + Russia)</strong> offers arms, trade lifelines, and diplomatic cover. The <strong>Energy Bloc (EU + India)</strong> is pressuring you to de-escalate. How do you position yourself?',
+      choices:[
+        {cls:'ch-agg',tag:'AGGRESSIVE',title:'Court the Rival Bloc',desc:'Publicly align with China and Russia, accept military hardware and economic ties.',cost:'Resolve +15 · Tension +20 · Rival Bloc support rises',fx:()=>{G.resolve+=15;G.tension+=20;G.B+=0.5;G.score+=30;addLog('Rival Bloc deepens commitment. B rises.','ev-info');return'You secured Russia-China backing. Your escalation payoffs improve — but the credibility bar rises too.'}},
+        {cls:'ch-dip',tag:'DIPLOMATIC',title:'Engage Energy Bloc',desc:'Open backchannel talks with EU and India, hinting at concessions in exchange for breathing room.',cost:'Tension −10 · Energy Bloc pressure eases · Score moderate',fx:()=>{G.tension-=10;G.a-=0.3;G.score+=20;addLog('Energy Bloc softens stance. a decreases.','ev-good');return'Energy Bloc applies less pressure. Your cooperative payoffs stay stable.'}},
+        {cls:'ch-int',tag:'INTELLIGENCE',title:'Dual-track outreach',desc:'Publicly threaten while secretly signalling openness. Maintain ambiguity.',cost:'Resolve +8 · Score bonus · Opponent uncertainty rises',fx:()=>{G.resolve+=8;G.oppResolve-=5;G.score+=25;addLog('Ambiguity sown. Opponent unsure of your type.','ev-info');return'Your type is now harder to read. The USA\'s estimate of your resolve rises slightly.'}}
+      ]
+    },
+    {
+      stage:'STAGE 1 · THREAT',phase:'Stage 1',
+      title:'The Demand',
+      body:'You move first. The USA is watching. If you threaten and they call your bluff — backing down will cost you everything. If you restrain, you keep the cooperative gains. But the rival bloc is watching too. What do you announce?',
+      choices:[
+        {cls:'ch-agg',tag:'ESCALATE',title:'Issue the Nuclear Threat',desc:'Publicly announce acceleration of uranium enrichment. Demand USA lift sanctions or face full escalation.',cost:'Tension +25 · High risk · High reward if USA complies',fx:()=>{G.resolve+=10;G.tension+=25;G.stats.threats++;G.score+=_threatResolve();addLog('Threat issued. Stage 2 begins.','ev-warn');return`You\'ve threatened. USA now weighs your resolve (${G.resolve}%) against their critical risk threshold. If they comply: +${Math.round(4+G.B)} payoff. If they resist and you back down: +1 only.`}},
+        {cls:'ch-dip',tag:'RESTRAIN',title:'Signal Restraint',desc:'Publicly freeze one programme in exchange for partial sanctions relief. A smaller gain, but guaranteed.',cost:'Tension −5 · Safe payoff · Cooperative outcome',fx:()=>{G.tension-=5;G.stats.coops++;G.score+=Math.round((3+G.a)*10);addLog('Restraint signalled. Cooperative outcome.','ev-good');return`You chose stability. Both sides gain (${(3+G.a).toFixed(1)}, ${(3+G.a).toFixed(1)}). The Energy Bloc rewards you with trade access.`}},
+        {cls:'ch-int',tag:'AMBIGUOUS',title:'Deliberate Ambiguity',desc:'Say nothing publicly. Let intelligence leaks do the work — neither a threat nor a concession.',cost:'Tension +5 · Moderate score · Keeps options open',fx:()=>{G.tension+=5;G.resolve+=5;G.score+=18;addLog('Strategic silence. Opponent guessing.','ev-info');return'You kept your options open. The USA cannot fully model you. Your perceived resolve nudges upward.'}}
+      ]
+    },
+    {
+      stage:'STAGE 2 · RESPONSE',phase:'Stage 2',
+      title:'They Pushed Back',
+      body:'The USA has resisted your threat. Now it\'s <strong>Stage 3</strong> — the moment of truth. Do you carry out the punishment, or back down? Carrying out means mutual damage but proves you\'re Hard. Backing down preserves peace but destroys your reputation.',
+      choices:[
+        {cls:'ch-agg',tag:'CARRY OUT',title:'Follow Through',desc:'Escalate to full enrichment. Trigger sanctions spiral. Prove you are the Hard type.',cost:'Both sides take damage · Resolve surge · Reputation locked in',fx:()=>{G.stats.wars++;G.tension=Math.min(100,G.tension+30);G.resolve=Math.min(100,G.resolve+20);G.oppResolve-=15;G.score+=15;addLog('Carried out. Mutual damage. Reputation: HARD.','ev-warn');return'You carried through. Payoff: (−B, 0) = ('+(-G.B).toFixed(1)+', 0). Brutal — but next round, the USA will think twice about calling your bluff.'}},
+        {cls:'ch-dip',tag:'BACK DOWN',title:'Stand Down',desc:'Quietly de-escalate. Take the reputational hit, but avoid mutual destruction.',cost:'Resolve −20 · Minor payoff · Tension drops sharply',fx:()=>{G.resolve=Math.max(0,G.resolve-20);G.tension=Math.max(0,G.tension-20);G.score+=8;addLog('Backed down. Reputation: SOFT.','ev-good');return'You stood down. Payoff: (4, 1). USA called your bluff successfully. Your reputation as a Hard type weakens — future threats will need more credibility to work.'}},
+        {cls:'ch-int',tag:'PARTIAL',title:'Controlled Escalation',desc:'Escalate just enough to signal resolve, then pause — leaving room for negotiation.',cost:'Tension +10 · Medium payoff · Ambiguous signal',fx:()=>{G.tension+=10;G.resolve+=5;G.score+=20;addLog('Partial escalation. Signal sent.','ev-info');return'You partially escalated. A mixed signal — costly to maintain but keeps your type ambiguous for future rounds.'}}
+      ]
+    },
+    {
+      stage:'STAGE 3 · BLOCS REACT',phase:'Stage 3',
+      title:'The Blocs Are Moving',
+      body:'Your choices have consequences. The <strong>Rival Bloc\'s</strong> continued support depends on whether Iran projects strength. The <strong>Energy Bloc</strong> is deciding whether to tighten sanctions or offer trade. One move now shapes the final endgame.',
+      choices:[
+        {cls:'ch-agg',tag:'PRESSURE',title:'Leverage Rival Bloc Support',desc:'Call in favours — request public statements from Beijing and Moscow condemning US pressure.',cost:'B rises · Tension +15 · p* threshold rises',fx:()=>{G.B=Math.min(4,G.B+0.4);G.tension+=15;G.score+=22;addLog('Rival Bloc goes public. B rises to '+G.B.toFixed(1)+'.','ev-warn');const ps=((3+G.B)/(4+G.B)).toFixed(2);return`Rival Bloc B now ${G.B.toFixed(1)}. Critical risk threshold p* = ${ps}. The USA now needs to believe you\'re Hard with ${Math.round(parseFloat(ps)*100)}% probability before complying.`}},
+        {cls:'ch-dip',tag:'NEGOTIATE',title:'Engage Energy Bloc Deal',desc:'Accept EU trade terms in exchange for partial concessions. Reduce tension, stabilise.',cost:'a rises · Tension −15 · Cooperative payoff improves',fx:()=>{G.a=Math.min(4,G.a+0.4);G.tension=Math.max(0,G.tension-15);G.score+=20;addLog('Energy Bloc deal struck. a rises to '+G.a.toFixed(1)+'.','ev-good');return`Energy Bloc a now ${G.a.toFixed(1)}. Cooperative payoff is now (${(3+G.a).toFixed(1)}, ${(3+G.a).toFixed(1)}). A better outcome if you choose restraint next round.`}},
+        {cls:'ch-int',tag:'COVERT',title:'Covert Programme Advance',desc:'Advance nuclear programme secretly. Deny everything publicly. Build resolve quietly.',cost:'Resolve +12 · No tension change · Surprise factor',fx:()=>{G.resolve=Math.min(100,G.resolve+12);G.score+=18;addLog('Covert advance. Resolve +12.','ev-info');return'Resolve climbs quietly. Your perceived type is unchanged publicly — but your actual capacity grows. A gamble on the final round.'}}
+      ]
+    },
+    {
+      stage:'FINAL · ENDGAME',phase:'Endgame',
+      title:'The Final Gambit',
+      body:'This is the last move. Your resolve stands at <strong id="fr-resolve">—</strong>, the critical risk threshold is <strong id="fr-pstar">—</strong>. One final decision will define your legacy: Blackmail King or Diplomatic Architect?',
+      choices:[
+        {cls:'ch-agg',tag:'FINAL THREAT',title:'The Ultimate Ultimatum',desc:'Go all-in. Full nuclear declaration. Demand complete sanctions removal or face war.',cost:'Maximum risk · Maximum reward if resolve > p*',fx:()=>{const ps=(3+G.B)/(4+G.B);const p=G.resolve/100;if(p>ps&&G.B>(G.a-1)){G.score+=80;G.stats.threats++;addLog('BLACKMAIL SUCCEEDED. USA complied.','ev-info');return`BLACKMAIL SUCCEEDS. Your resolve (${(p*100).toFixed(0)}%) exceeded p* (${(ps*100).toFixed(0)}%). USA complied. Final payoff: (${(1-G.B).toFixed(1)}, ${(4+G.B).toFixed(1)}). You win — but at a cost.`}else{G.score+=10;G.stats.wars++;addLog('Bluff called. USA resisted.','ev-warn');return`Bluff called. Your resolve (${(p*100).toFixed(0)}%) was below p* (${(ps*100).toFixed(0)}%) or incentive condition failed (B=${G.B.toFixed(1)}, a−1=${(G.a-1).toFixed(1)}). USA resisted. Mutual damage.`}}},
+        {cls:'ch-dip',tag:'GRAND BARGAIN',title:'The Grand Bargain',desc:'Announce comprehensive nuclear deal in exchange for full sanctions relief. End the game on your terms diplomatically.',cost:'Guaranteed cooperative payoff · Legacy secured',fx:()=>{G.score+=60;G.stats.coops++;addLog('Grand Bargain struck. Cooperation wins.','ev-good');return`Grand Bargain achieved. Both sides gain (${(3+G.a).toFixed(1)}, ${(3+G.a).toFixed(1)}). You leave the table with influence, stability, and a reputation that endures.`}},
+        {cls:'ch-int',tag:'PHANTOM THREAT',title:'The Phantom Threat',desc:'Announce a secret programme exists — but never confirm or deny details. Pure psychological warfare.',cost:'Moderate score · Opponent uncertainty maximised',fx:()=>{G.score+=35;G.resolve+=5;addLog('Phantom threat. Opponent in the dark.','ev-info');return'You exploited uncertainty. The USA cannot confirm your type. A classic Ellsberg play — the art of making an irrational action appear rational.'}}
+      ]
+    }
+  ];
+}
+
+function usaRounds(){
+  return [
+    {
+      stage:'STAGE 0 · INTELLIGENCE',phase:'Stage 0',
+      title:'Assess the Threat',
+      body:'Before Iran moves, you need to form a belief about their type. The CIA has intel — but it\'s incomplete. The <strong>Rival Bloc (China + Russia)</strong> has been supplying Iran. The <strong>Energy Bloc (EU + India)</strong> is pressuring both sides. What\'s your read?',
+      choices:[
+        {cls:'ch-int',tag:'INTELLIGENCE',title:'Deep Surveillance Op',desc:'Expand signals intelligence and satellite monitoring of Iranian nuclear sites.',cost:'Opponent resolve estimate improves · Score bonus',fx:()=>{G.oppResolve+=10;G.score+=25;addLog('Intel gathered. Better read on Iran type.','ev-info');return'Surveillance reveals activity at enrichment sites. Your estimate of Iran\'s resolve rises. You\'ll need this when choosing whether to comply or resist.'}},
+        {cls:'ch-dip',tag:'DIPLOMATIC',title:'Back-Channel Opening',desc:'Open quiet diplomatic contact through Swiss intermediaries.',cost:'Tension −15 · Moderate payoff · Cooperative mood',fx:()=>{G.tension=Math.max(0,G.tension-15);G.score+=20;addLog('Back-channel open. Tension eases.','ev-good');return'A quiet channel is open. Iran\'s willingness to engage suggests their Back Down payoff may be positive — a Soft type signal.'}},
+        {cls:'ch-agg',tag:'PRESSURE',title:'Pre-emptive Sanctions Surge',desc:'Announce new sanctions before Iran moves. Signal you will not comply.',cost:'Tension +20 · Resolve boost · Sends credible resist signal',fx:()=>{G.tension+=20;G.resolve+=12;G.score+=22;addLog('Sanctions surge announced. Pressure applied.','ev-warn');return'You signalled resolve early. Iran now knows compliance is not automatic — this may deter a threat before it\'s even issued.'}}
+      ]
+    },
+    {
+      stage:'STAGE 1 · IRAN THREATENS',phase:'Stage 1',
+      title:'The Threat Is On The Table',
+      body:'Iran has issued a nuclear ultimatum. Your analysts put their resolve at roughly <strong id="us-resolve-est">~60%</strong>. The critical risk threshold is <strong id="us-pstar">p*</strong>. Do you comply, resist, or negotiate?',
+      choices:[
+        {cls:'ch-agg',tag:'RESIST',title:'Call the Bluff',desc:'Publicly reject Iran\'s demand. Signal you believe they are the Soft type and will back down.',cost:'High risk if Iran is Hard · Big reward if Soft',fx:()=>{const ps=(3+G.B)/(4+G.B);const p=G.oppResolve/100;if(p<ps){G.score+=60;addLog('Bluff called. Iran backed down.','ev-good');return`Correct call. Iran\'s resolve (${Math.round(p*100)}%) was below p* (${Math.round(ps*100)}%). They backed down. You gain 4. They get only 1.`}else{G.score+=5;G.stats.wars++;G.tension+=30;addLog('Iran carried out. Mutual damage.','ev-warn');return`Wrong call. Iran was Hard (resolve ${Math.round(p*100)}% > p* ${Math.round(ps*100)}%). They carried out. You absorb (−${G.B.toFixed(1)}) payoff. Costly.`}}},
+        {cls:'ch-dip',tag:'COMPLY',title:'Grant Partial Concessions',desc:'Offer limited sanctions relief. Signal willingness to negotiate Iran\'s core demand.',cost:'Lower payoff but avoids war risk',fx:()=>{const ps=(3+G.B)/(4+G.B);const p=G.oppResolve/100;if(p>ps){G.score+=35;G.stats.complies++;addLog('Complied. Correct given Iran resolve.','ev-good');return`Wise compliance. Iran\'s resolve (${Math.round(p*100)}%) exceeded p* (${Math.round(ps*100)}%). Resisting would have triggered carry-out. You get (1−B) = ${(1-G.B).toFixed(1)} but avoid (−B) = ${(-G.B).toFixed(1)}.`}else{G.score+=15;addLog('Complied unnecessarily. Soft Iran would have backed down.','ev-warn');return`Unnecessary compliance. Iran was Soft — they would have backed down. You conceded (1−B) = ${(1-G.B).toFixed(1)} when you could have held firm for 4.`}}},
+        {cls:'ch-int',tag:'COUNTER',title:'Counter-Threat',desc:'Announce military readiness exercises. Signal that escalation will be met with full force.',cost:'Tension +15 · Moderate payoff · Type-signalling to Iran',fx:()=>{G.tension+=15;G.resolve+=8;G.score+=28;addLog('Counter-threat issued. Tension rises.','ev-info');return'You signalled resolve. Iran now updates their belief about your willingness to resist. A costly signal — but credible ones are the only ones that work.'}}
+      ]
+    },
+    {
+      stage:'STAGE 2 · AFTER THE THREAT',phase:'Stage 2',
+      title:'Manage The Fallout',
+      body:'The threat phase has passed. Now you must rebuild, reposition, or reinforce. The Rival Bloc\'s support for Iran remains strong. How do you respond at the geopolitical level?',
+      choices:[
+        {cls:'ch-dip',tag:'COALITION',title:'Build the Coalition',desc:'Rally Energy Bloc (EU + India) behind a united sanctions front.',cost:'a rises · Pressure on Iran increases · Moderate score',fx:()=>{G.a=Math.min(4,G.a+0.5);G.score+=25;addLog('Coalition built. Energy Bloc pressure rises.','ev-good');return`Energy Bloc support strengthened. a now ${G.a.toFixed(1)}. Cooperative outcome payoff rises to (${(3+G.a).toFixed(1)}, ${(3+G.a).toFixed(1)}). Iran\'s incentive to threaten requires B > a−1 = ${(G.a-1).toFixed(1)}.`}},
+        {cls:'ch-agg',tag:'MILITARY',title:'Military Posturing',desc:'Deploy carrier group to the Gulf. Signal kinetic options are on the table.',cost:'Tension +20 · Opponent resolve drops · Risk of miscalc',fx:()=>{G.tension+=20;G.oppResolve=Math.max(10,G.oppResolve-12);G.resolve+=10;G.score+=22;addLog('Military posture. Opponent resolve drops.','ev-warn');return'Carrier deployed. Iran\'s resolve weakens slightly — the cost of carrying out punishment appears higher. But tension is elevated.'}},
+        {cls:'ch-int',tag:'ECONOMIC',title:'Targeted Sanctions Package',desc:'Precision sanctions on IRGC financial networks — painful but calibrated.',cost:'Tension neutral · Score bonus · Sustainable pressure',fx:()=>{G.score+=30;G.a=Math.min(4,G.a+0.3);addLog('Precision sanctions applied.','ev-info');return'Targeted pressure applied. Iran feels economic pain without triggering an escalation spiral. A sustainable approach that keeps cooperative options open.'}}
+      ]
+    },
+    {
+      stage:'STAGE 3 · CREDIBILITY WINDOW',phase:'Stage 3',
+      title:'The Credibility Window',
+      body:'Intelligence suggests Iran may threaten again next round. Your critical risk threshold is currently <strong>p* = <span id="us2-pstar">—</span></strong>. You need to decide: do you look strong, or leave the door open for a deal?',
+      choices:[
+        {cls:'ch-agg',tag:'COMMIT',title:'Public Commitment to Resist',desc:'Announce publicly that you will never comply with nuclear blackmail. Remove the comply option.',cost:'Resolve surge · Tension +10 · Commitment device',fx:()=>{G.resolve=Math.min(100,G.resolve+18);G.tension+=10;G.score+=28;addLog('Public commitment to resist. Resolve surge.','ev-warn');return'Ellsberg\'s commitment device — you\'ve removed your own compliance option publicly. Iran\'s blackmail can only work if they believe you\'d back down. You just made that impossible.'}},
+        {cls:'ch-dip',tag:'OPEN DOOR',title:'Secret Deal Framework',desc:'Leak to media that a confidential deal framework exists. Encourage Iran to take it.',cost:'Tension −20 · Moderate score · Opens exit ramp',fx:()=>{G.tension=Math.max(0,G.tension-20);G.score+=22;addLog('Exit ramp offered. Tension drops.','ev-good');return'An exit ramp is on the table. Iran\'s Soft type is more likely to accept. Tension falls. But if Iran is Hard, they\'ll see this as weakness.'}},
+        {cls:'ch-int',tag:'RECON',title:'Type-Revealing Operation',desc:'Deploy intelligence to determine whether Iran\'s leadership is Hard or Soft.',cost:'Score bonus · Opponent resolve estimate sharpens',fx:()=>{G.score+=25;const revealed=G.oppResolve>50?'HARD':'SOFT';addLog(`Intel: Iran type reads as ${revealed}.`,'ev-info');return`Intel operation complete. Iran reads as likely ${revealed} type (resolve est. ${G.oppResolve}%). Adjust your final round strategy accordingly. p* = ${((3+G.B)/(4+G.B)).toFixed(2)}.`}}
+      ]
+    },
+    {
+      stage:'FINAL · ENDGAME',phase:'Endgame',
+      title:'The Final Calculation',
+      body:'Last round. Iran\'s resolve estimate: <strong id="us3-resolve">—</strong>. Critical threshold p*: <strong id="us3-pstar">—</strong>. One decision defines your legacy.',
+      choices:[
+        {cls:'ch-agg',tag:'STAND FIRM',title:'Final Ultimatum: No Compliance',desc:'Announce you will never comply with nuclear blackmail under any circumstances.',cost:'Maximum risk · Maximum reward if Iran is Soft',fx:()=>{const ps=(3+G.B)/(4+G.B);const p=G.oppResolve/100;if(p<ps){G.score+=80;addLog('Iran backed down. You won.','ev-good');return`Victory. Iran\'s resolve (${Math.round(p*100)}%) was below p* (${Math.round(ps*100)}%). They backed down. You gain 4 per round. Reputation: unbreakable.`}else{G.score+=10;G.tension=100;addLog('Iran carried out. Mutual damage.','ev-warn');return`Iran was Hard. They carried out. Payoff (−${G.B.toFixed(1)}) for you. Painful — but you held a line that will define the next 20 years of deterrence.`}}},
+        {cls:'ch-dip',tag:'NEGOTIATE',title:'Final Grand Bargain',desc:'Offer comprehensive deal: phased sanctions relief for phased nuclear rollback.',cost:'Guaranteed cooperative payoff · Legacy of diplomacy',fx:()=>{G.score+=65;G.stats.coops++;addLog('Grand Bargain. Cooperation.','ev-good');return`Deal struck. Cooperative outcome (${(3+G.a).toFixed(1)}, ${(3+G.a).toFixed(1)}). Not the maximum payoff — but a stable, durable outcome that keeps the peace.`}},
+        {cls:'ch-int',tag:'BLUFF CALL',title:'Strategic Ambiguity',desc:'Signal neither compliance nor resistance. Force Iran to make the final move under uncertainty.',cost:'Moderate score · Opponent must decide under doubt',fx:()=>{G.score+=40;addLog('Strategic ambiguity. Iran must choose.','ev-info');return`You forced Iran into uncertainty. They couldn\'t model your type — and chose restraint. A textbook Ellsberg play: making an irrational action appear rational enough to deter action entirely.`}}
+      ]
+    }
+  ];
+}
+
+// ══════════════════════════════════════════════
+// GAME ENGINE
+// ══════════════════════════════════════════════
+let rounds=[], currentRound=0, pendingResult='';
+
+function renderRound(){
+  if(currentRound>=G.maxRounds){endGame();return;}
+  const rd=rounds[currentRound];
+  document.getElementById('hud-round').textContent=(currentRound+1)+' / '+G.maxRounds;
+  document.getElementById('phase-badge').textContent=rd.phase;
+  updateHUD();
+
+  const area=document.getElementById('stage-area');
+  area.innerHTML=`
+    <div class="stage-card">
+      <div class="stage-eyebrow">${rd.stage}</div>
+      <div class="stage-title">${rd.title}</div>
+      <div class="stage-body">${rd.body}</div>
+      <div class="choices" id="choices-wrap"></div>
+    </div>`;
+
+  // inject dynamic values
+  if(document.getElementById('fr-resolve'))document.getElementById('fr-resolve').textContent=G.resolve+'%';
+  if(document.getElementById('fr-pstar'))document.getElementById('fr-pstar').textContent=((3+G.B)/(4+G.B)*100).toFixed(0)+'%';
+  if(document.getElementById('us-resolve-est'))document.getElementById('us-resolve-est').textContent='~'+G.oppResolve+'%';
+  if(document.getElementById('us-pstar'))document.getElementById('us-pstar').textContent=((3+G.B)/(4+G.B)).toFixed(2);
+  if(document.getElementById('us2-pstar'))document.getElementById('us2-pstar').textContent=((3+G.B)/(4+G.B)).toFixed(2);
+  if(document.getElementById('us3-resolve'))document.getElementById('us3-resolve').textContent=G.oppResolve+'%';
+  if(document.getElementById('us3-pstar'))document.getElementById('us3-pstar').textContent=((3+G.B)/(4+G.B)).toFixed(2);
+
+  const wrap=document.getElementById('choices-wrap');
+  rd.choices.forEach((ch,i)=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn '+ch.cls;
+    btn.innerHTML=`<div class="ch-tag">${ch.tag}</div><div class="ch-title">${ch.title}</div><div class="ch-desc">${ch.desc}</div><div class="ch-cost">${ch.cost}</div>`;
+    btn.onclick=()=>makeChoice(ch,i);
+    wrap.appendChild(btn);
+  });
+}
+
+function makeChoice(ch,idx){
+  // disable all buttons
+  document.querySelectorAll('.choice-btn').forEach(b=>{b.disabled=true;b.style.opacity='.4';});
+  const result=ch.fx();
+  currentRound++;
+  updateHUD();
+  const icons=['⚡','🎯','🛡️','💣','🤝'];
+  showEvent(icons[idx%icons.length],ch.title,result,()=>{renderRound();});
+}
+
+function _threatResolve(){
+  const ps=(3+G.B)/(4+G.B);
+  const p=G.resolve/100;
+  if(p>ps&&G.B>(G.a-1))return 65;
+  return 20;
+}
+
+// ══════════════════════════════════════════════
+// HUD
+// ══════════════════════════════════════════════
+function updateHUD(){
+  document.getElementById('hud-role').textContent=G.role==='iran'?'🇮🇷 IRAN':'🇺🇸 USA';
+  document.getElementById('hud-diff').textContent={easy:'Analyst',normal:'Operative',hard:'Director'}[G.diff];
+  document.getElementById('hud-score').textContent=G.score;
+  const r=Math.max(0,Math.min(100,G.resolve));
+  const or=Math.max(0,Math.min(100,G.oppResolve));
+  document.getElementById('bar-resolve').style.width=r+'%';
+  document.getElementById('lbl-resolve').textContent=r;
+  document.getElementById('bar-opp-resolve').style.width=or+'%';
+  document.getElementById('lbl-opp-resolve').textContent=or;
+  document.getElementById('lbl-energy').textContent='a = '+G.a.toFixed(1);
+  document.getElementById('lbl-rival').textContent='B = '+G.B.toFixed(1);
+  const t=Math.max(0,Math.min(100,G.tension));
+  document.getElementById('tension-fill').style.width=t+'%';
+  document.getElementById('tension-lbl').textContent=t<30?'LOW':t<60?'HIGH':'CRITICAL';
+}
+
+function addLog(msg,cls){
+  const log=document.getElementById('turn-log');
+  const el=document.createElement('div');
+  el.className='log-entry '+(cls||'');
+  el.textContent=msg;
+  log.prepend(el);
+  while(log.children.length>12)log.removeChild(log.lastChild);
+}
+
+// ══════════════════════════════════════════════
+// EVENT OVERLAY
+// ══════════════════════════════════════════════
+function showEvent(icon,title,body,cb){
+  document.getElementById('ev-icon').textContent=icon;
+  document.getElementById('ev-title').textContent=title;
+  document.getElementById('ev-body').textContent=body;
+  document.getElementById('event-overlay').style.display='flex';
+  eventCallback=cb;
+}
+function closeEvent(){
+  document.getElementById('event-overlay').style.display='none';
+  const cb=eventCallback;
+  eventCallback=null;
+  if(cb)cb();
+}
+
+// ══════════════════════════════════════════════
+// END GAME
+// ══════════════════════════════════════════════
+function endGame(){
+  show('s-end');
+  const s=G.score;
+  let title,body,col;
+  if(s>=250){title='BLACKMAIL KING';body='You mastered coercion. Every threat landed, every bluff held. Ellsberg would approve.';col=G.role==='iran'?'var(--red)':'var(--gold)';}
+  else if(s>=150){title='OPERATIVE';body='Solid campaign. You balanced threat and diplomacy with skill.';col='var(--acc)';}
+  else{title='BACK DOWN';body='The bluffs didn\'t hold. Next time: read the credibility threshold before you threaten.';col='var(--text3)';}
+  document.getElementById('end-title').textContent=title;
+  document.getElementById('end-title').style.color=col;
+  document.getElementById('end-score').textContent=s;
+  document.getElementById('end-score').style.color=col;
+  document.getElementById('end-body').textContent=body;
+  const ps=((3+G.B)/(4+G.B)*100).toFixed(0);
+  document.getElementById('end-stats').innerHTML=`
+    <div class="end-stat"><div class="es-val">${G.stats.threats}</div><div class="es-lbl">Threats Issued</div></div>
+    <div class="end-stat"><div class="es-val">${G.stats.coops}</div><div class="es-lbl">Cooperative Outcomes</div></div>
+    <div class="end-stat"><div class="es-val">${G.stats.wars}</div><div class="es-lbl">Escalations</div></div>
+    <div class="end-stat"><div class="es-val">${ps}%</div><div class="es-lbl">Final p* Threshold</div></div>`;
+}
+
+function replay(){
+  Object.assign(G,{score:0,round:1,resolve:50,oppResolve:50,tension:20,a:2,B:1.5,history:[],stats:{threats:0,complies:0,wars:0,coops:0}});
+  currentRound=0;
+  rounds=[];
+  document.getElementById('turn-log').innerHTML='';
+  // reset role selection
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('sel'));
+  // reset diff to normal
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('sel'));
+  const normalBtn=document.querySelector('.diff-btn[data-diff="normal"]');
+  if(normalBtn){normalBtn.classList.add('sel');G.diff='normal';}
+  show('s-intro');
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+// init: sync G.diff with pre-selected button
+G.diff = document.querySelector('.diff-btn.sel')?.dataset.diff || 'normal';
+</script>
+</body>
+</html>

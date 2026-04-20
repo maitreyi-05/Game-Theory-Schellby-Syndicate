@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEFCON: The Blackmail Game · Schellby Syndicate</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Share+Tech+Mono&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#060810;--bg2:#0a0e18;--bg3:#0e1420;--bg4:#131a28;--bg5:#1a2235;
+  --border:#1e2d42;--border2:#28405a;--border3:#3a5572;
+  /* HIGH CONTRAST text colours — all well above 7:1 against dark bg */
+  --text:#F0F4FF;--text2:#C8D8F0;--text3:#8AABCC;--text4:#4a6a88;
+  --accent:#00E5FF;--accent2:#00BCD4;--accent3:#80DEEA;
+  --gold:#FFD740;--gold2:#FFC107;--gold3:#FFE082;
+  --red:#FF5252;--red2:#FF1744;--red3:#FF8A80;
+  --green:#69FF47;--green2:#00E676;--green3:#B9F6CA;
+  --amber:#FFD740;--amber2:#FFAB40;
+  --purple:#EA80FC;--purple2:#CE93D8;
+  --cyan:#00E5FF;
+  --scanline:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,229,255,.006) 3px,rgba(0,229,255,.006) 4px);
+  --font-head:'Barlow Condensed',sans-serif;
+  --font-body:'Barlow',sans-serif;
+  --font-mono:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;background-image:var(--scanline)}
+
+/* ── HEADER ── */
+.hdr{background:var(--bg2);border-bottom:2px solid var(--border2);position:relative}
+.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 5%,var(--accent) 40%,var(--gold) 60%,transparent 95%);opacity:.7}
+.topbar{background:#03050a;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:.4rem 2rem;font-family:var(--font-mono);font-size:11.5px;color:var(--text3);letter-spacing:.07em}
+.topbar .team{color:var(--gold);font-weight:700;letter-spacing:.12em}
+.topbar .live{color:var(--red);letter-spacing:.14em;display:flex;align-items:center;gap:7px;font-weight:700}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,82,82,.6)}50%{opacity:.3;box-shadow:0 0 0 5px rgba(255,82,82,0)}}
+.hdr-main{max-width:1100px;margin:0 auto;padding:1.75rem 2rem 1.5rem;display:flex;align-items:flex-end;justify-content:space-between;gap:2rem}
+.eyebrow{font-family:var(--font-mono);font-size:11.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent3);margin-bottom:.45rem}
+.title{font-family:var(--font-head);font-size:clamp(2.4rem,5.5vw,4rem);font-weight:800;line-height:1;color:var(--text);letter-spacing:.06em;margin-bottom:.35rem;text-transform:uppercase}
+.title span{color:var(--accent);text-shadow:0 0 30px rgba(0,229,255,.3)}
+.subtitle{font-family:var(--font-body);font-size:16px;color:var(--text2);font-style:italic;margin-bottom:1rem;font-weight:400}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap}
+.badge{font-family:var(--font-mono);font-size:11px;padding:4px 11px;border-radius:3px;border:1.5px solid;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.b-blue{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.09)}
+.b-gold{border-color:var(--gold);color:var(--gold);background:rgba(255,215,64,.09)}
+.b-red{border-color:var(--red);color:var(--red);background:rgba(255,82,82,.09)}
+.b-green{border-color:var(--green2);color:var(--green2);background:rgba(0,230,118,.09)}
+.b-purple{border-color:var(--purple);color:var(--purple);background:rgba(234,128,252,.09)}
+.score-box{text-align:right;flex-shrink:0;background:var(--bg3);border:1.5px solid var(--border2);border-radius:8px;padding:.9rem 1.4rem;font-family:var(--font-mono)}
+.score-box .slbl{font-size:11px;color:var(--text3);letter-spacing:.16em;text-transform:uppercase}
+.score-box .sval{font-size:2.4rem;font-weight:700;color:var(--gold);letter-spacing:.06em;line-height:1.1;text-shadow:0 0 20px rgba(255,215,64,.25)}
+.score-box .ssub{font-size:11px;color:var(--text3);margin-top:3px}
+
+/* ── NAV ── */
+.nav-wrap{background:var(--bg3);border-bottom:1.5px solid var(--border)}
+.nav{max-width:1100px;margin:0 auto;padding:0 2rem;display:flex;gap:0;overflow-x:auto}
+.nav button{font-family:var(--font-head);font-size:15px;font-weight:700;padding:.9rem 1.4rem;border:none;border-bottom:3px solid transparent;background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.nav button:hover{color:var(--text);background:rgba(0,229,255,.05)}
+.nav button.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(0,229,255,.06)}
+.tab-num{font-family:var(--font-mono);font-size:10px;color:var(--text4);margin-right:6px}
+
+/* ── LAYOUT ── */
+.layout{max-width:1100px;margin:0 auto;padding:1.75rem 2rem 3rem}
+.section{display:none}.section.visible{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:1.4rem 1.7rem;margin-bottom:1rem;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:10px 0 0 10px;background:var(--accent);opacity:.8}
+.card.cr::before{background:var(--red)}.card.cg::before{background:var(--green2)}.card.co::before{background:var(--gold)}.card.cp::before{background:var(--purple)}
+.card-title{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.card-title::after{content:'';flex:1;height:1px;background:var(--border2)}
+.card.cr .card-title{color:var(--red)}.card.cg .card-title{color:var(--green2)}.card.co .card-title{color:var(--gold)}.card.cp .card-title{color:var(--purple)}
+.card p{font-size:16px;color:var(--text2);line-height:1.75}
+.card p strong{color:var(--text);font-weight:600}
+
+/* ── METRICS ── */
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.metric{background:var(--bg4);border:1.5px solid var(--border2);border-radius:8px;padding:1rem 1.1rem}
+.metric-label{font-family:var(--font-mono);font-size:10.5px;color:var(--text3);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px}
+.metric-value{font-size:2.3rem;font-weight:700;color:var(--text);font-family:var(--font-mono);line-height:1}
+.metric-sub{font-family:var(--font-body);font-size:13px;color:var(--text3);margin-top:5px;line-height:1.4}
+
+/* ── SLIDERS ── */
+.param-row{display:flex;align-items:center;gap:16px;margin-bottom:1.15rem}
+.param-label{font-family:var(--font-body);font-size:16px;font-weight:600;color:var(--text2);min-width:240px}
+.param-label .pkey{font-family:var(--font-mono);font-size:14px;color:var(--accent);font-weight:700}
+.param-row input[type=range]{flex:1;-webkit-appearance:none;height:5px;background:var(--bg5);border-radius:3px;outline:none;cursor:pointer}
+.param-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:3px;background:var(--accent);border:2px solid var(--bg);cursor:pointer;box-shadow:0 0 10px rgba(0,229,255,.4)}
+.param-val{font-family:var(--font-mono);font-size:17px;font-weight:700;min-width:50px;text-align:right;color:var(--gold)}
+
+/* ── OUTCOME BANNER ── */
+.outcome-banner{border-radius:8px;padding:1rem 1.3rem;font-family:var(--font-head);font-size:17px;font-weight:800;margin-bottom:1rem;border:1.5px solid;letter-spacing:.06em;text-transform:uppercase}
+.outcome-coop{background:rgba(0,230,118,.1);color:var(--green2);border-color:rgba(0,230,118,.4)}
+.outcome-black{background:rgba(255,82,82,.1);color:var(--red3);border-color:rgba(255,82,82,.45)}
+.outcome-noatt{background:rgba(255,215,64,.08);color:var(--gold2);border-color:rgba(255,215,64,.4)}
+
+/* ── COND ROWS ── */
+.cond-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-size:15.5px;color:var(--text2);font-weight:500}
+.cond-row strong{color:var(--text);font-weight:700}
+.cond-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;transition:all .3s}
+.cond-dot.pass{background:var(--green2);box-shadow:0 0 10px rgba(0,230,118,.6)}
+.cond-dot.fail{background:var(--red);box-shadow:0 0 6px rgba(255,82,82,.4)}
+
+/* ── TABLES ── */
+.gt{width:100%;border-collapse:collapse}
+.gt th{font-family:var(--font-mono);font-weight:700;font-size:11px;color:var(--text3);padding:9px 13px;border-bottom:1.5px solid var(--border2);text-align:center;letter-spacing:.12em;text-transform:uppercase}
+.gt td{font-family:var(--font-body);padding:11px 13px;border-bottom:1px solid var(--border);text-align:center;color:var(--text2);font-size:15px;font-weight:500}
+.gt tr:last-child td{border-bottom:none}
+.gt td.lbl{text-align:left;font-size:14px}
+.gt tr.hi td{background:rgba(0,229,255,.07);color:var(--text)}
+
+/* ── p* BAR ── */
+.pbar-track{height:8px;background:var(--bg5);border-radius:4px;position:relative;overflow:visible;margin:.5rem 0 .35rem}
+.pbar-fill{height:8px;border-radius:4px;background:linear-gradient(90deg,rgba(255,82,82,.5),var(--red));transition:width .3s}
+.pbar-marker{position:absolute;top:-7px;width:3px;height:22px;background:var(--text);border-radius:2px;transition:left .3s;box-shadow:0 0 6px rgba(255,255,255,.5)}
+.pbar-labels{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11.5px;color:var(--text3);margin-top:6px}
+
+/* ── FORMULA ── */
+.formula{text-align:center;font-family:var(--font-mono);font-size:19px;padding:1rem 1.2rem;margin:.5rem 0;background:var(--bg4);border-radius:8px;border:1.5px solid var(--border2);color:var(--gold);letter-spacing:.06em}
+
+/* ── GRID ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.type-card{background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;padding:1.15rem 1.3rem}
+.type-card h4{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase}
+.type-card p{font-family:var(--font-body);font-size:15px;color:var(--text2);line-height:1.7}
+.type-card p strong{color:var(--text);font-weight:600}
+
+/* ── INSIGHT LIST ── */
+.insight-list{list-style:none}
+.insight-list li{font-size:15px;color:var(--text2);padding:11px 0 11px 18px;border-bottom:1px solid var(--border);line-height:1.72;position:relative}
+.insight-list li::before{content:'';position:absolute;left:0;top:16px;width:8px;height:2px;background:var(--accent);border-radius:1px}
+.insight-list li:last-child{border-bottom:none}
+.insight-list li strong{color:var(--accent3);font-weight:700}
+
+/* ── PLAYER CARDS ── */
+.player-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem}
+.player-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:1.25rem 1.45rem;position:relative;overflow:hidden}
+.player-card-icon{position:absolute;right:14px;top:12px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center}
+.player-faction{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text4);margin-bottom:4px}
+.player-name{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--text);margin-bottom:.5rem;letter-spacing:.05em;text-transform:uppercase}
+.player-body{font-size:14.5px;color:var(--text2);line-height:1.7}
+.player-body strong{color:var(--text);font-weight:600}
+.strat{display:inline-block;margin-top:.75rem;font-family:var(--font-mono);font-size:10.5px;padding:4px 10px;border-radius:3px;font-weight:700;letter-spacing:.08em;border:1.5px solid}
+.sb{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.1)}
+.sg{border-color:var(--green2);color:var(--green2);background:rgba(0,230,118,.1)}
+.so{border-color:var(--gold);color:var(--gold);background:rgba(255,215,64,.1)}
+
+/* ── SECTION DIVIDER ── */
+.sdiv{font-family:var(--font-mono);font-size:11.5px;color:var(--text3);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.3rem;display:flex;align-items:center;gap:12px}
+.sdiv::before,.sdiv::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* ── ACCORDION ── */
+.acc-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:.95rem 1.2rem;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;margin-bottom:4px;transition:background .15s;user-select:none}
+.acc-header:hover{background:var(--bg4);border-color:var(--border2)}
+.acc-header.open{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent;background:var(--bg4)}
+.acc-title{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--text);letter-spacing:.05em;display:flex;align-items:center;gap:10px;text-transform:uppercase}
+.acc-icon{font-family:var(--font-mono);font-size:13px;color:var(--accent);transition:transform .25s;flex-shrink:0}
+.acc-icon.open{transform:rotate(90deg)}
+.acc-body{background:var(--bg3);border:1.5px solid var(--border);border-top:none;border-bottom-left-radius:8px;border-bottom-right-radius:8px;padding:1.15rem 1.5rem;display:none;margin-bottom:4px}
+.acc-body.open{display:block}
+.acc-tag{font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:3px;letter-spacing:.08em;border:1px solid}
+.tag-blue{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.1)}
+.tag-gold{border-color:var(--gold);color:var(--gold);background:rgba(255,215,64,.1)}
+.tag-green{border-color:var(--green2);color:var(--green2);background:rgba(0,230,118,.1)}
+.tag-red{border-color:var(--red);color:var(--red);background:rgba(255,82,82,.1)}
+
+/* ── TOGGLE BUTTON GROUP ── */
+.toggle-group{display:flex;gap:5px;margin-bottom:1rem;background:var(--bg4);border:1.5px solid var(--border);border-radius:7px;padding:5px}
+.toggle-btn{font-family:var(--font-head);font-size:14px;font-weight:700;padding:7px 16px;border-radius:5px;border:none;background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+.toggle-btn:hover{color:var(--text);background:var(--bg3)}
+.toggle-btn.active{background:var(--bg2);color:var(--accent);border:1.5px solid var(--border2);text-shadow:0 0 10px rgba(0,229,255,.3)}
+
+/* ── DETAILS ── */
+details{margin-bottom:8px}
+details summary{cursor:pointer;font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--text2);padding:.6rem .9rem;background:var(--bg4);border:1.5px solid var(--border);border-radius:6px;list-style:none;display:flex;align-items:center;gap:9px;letter-spacing:.02em;transition:all .15s}
+details summary:hover{color:var(--text);border-color:var(--border2)}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'▶';font-size:9px;color:var(--accent);transition:transform .2s;flex-shrink:0}
+details[open] summary::before{transform:rotate(90deg)}
+details[open] summary{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+details .det-body{background:var(--bg4);border:1.5px solid var(--border);border-top:none;border-bottom-left-radius:6px;border-bottom-right-radius:6px;padding:1.1rem 1.2rem}
+details .det-body p{font-size:15px;color:var(--text2);line-height:1.75;margin-bottom:.5rem}
+details .det-body p:last-child{margin-bottom:0}
+details .det-body strong{color:var(--accent3)}
+
+/* ── QUOTE / CALLOUT ── */
+.callout{border-left:3px solid var(--gold);background:rgba(255,215,64,.06);border-radius:0 8px 8px 0;padding:1rem 1.3rem;margin:1rem 0}
+.callout p{font-size:15px;color:var(--text2);line-height:1.75;font-style:italic}
+.callout .attr{font-family:var(--font-mono);font-size:11px;color:var(--gold);letter-spacing:.08em;margin-top:.5rem;display:block;font-style:normal}
+
+/* ── TREE WRAPPER ── */
+.tree-outer{background:var(--bg3);border:1.5px solid var(--border2);border-radius:10px;padding:1.1rem;overflow-x:auto}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:1.5rem 2rem;font-family:var(--font-mono);font-size:11.5px;color:var(--text4);border-top:1px solid var(--border);letter-spacing:.07em}
+.footer strong{color:var(--gold)}
+
+/* ── DECORATIVE ICON ── */
+.icon-shield{width:36px;height:36px;display:inline-block}
+
+@media(max-width:700px){
+  .two-col,.type-grid,.player-grid{grid-template-columns:1fr}
+  .metric-grid{grid-template-columns:1fr 1fr}
+  .layout{padding:0 1rem 2rem}
+  .hdr-main{flex-direction:column;align-items:flex-start}
+  .nav button{padding:.75rem .85rem;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="hdr">
+  <div class="topbar">
+    <span>SYS: GEOSTRAT-IV &nbsp;·&nbsp; BUILD 2026.04 &nbsp;·&nbsp; CLEARANCE: UNCLASSIFIED &nbsp;·&nbsp; <span class="team">SCHELLBY SYNDICATE</span></span>
+    <span class="live"><span class="live-dot"></span>SIMULATION ACTIVE</span>
+  </div>
+  <div class="hdr-main">
+    <div>
+      <div class="eyebrow">// Game Theory Project &nbsp;·&nbsp; Ellsberg 1968 &nbsp;·&nbsp; Schellby Syndicate</div>
+      <div class="title">DEFCON: <span>The Blackmail Game</span></div>
+      <div class="subtitle">When does a nuclear threat actually work?</div>
+      <div class="badge-row">
+        <span class="badge b-blue">4 Players</span>
+        <span class="badge b-gold">3 Stages</span>
+        <span class="badge b-blue">SPE &middot; PBE</span>
+        <span class="badge b-red">Incomplete Information</span>
+        <span class="badge b-green">Bayesian Extension</span>
+        <span class="badge b-purple">Ellsberg 1968</span>
+      </div>
+    </div>
+    <div class="score-box">
+      <div class="slbl">Threat Index</div>
+      <div class="sval" id="threat-index">0.77</div>
+      <div class="ssub">p* threshold &nbsp;(live)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── NAV ── -->
+<div class="nav-wrap">
+  <nav class="nav">
+    <button class="active" onclick="show('overview',this)"><span class="tab-num">01.</span>Overview</button>
+    <button onclick="show('players',this)"><span class="tab-num">02.</span>Factions</button>
+    <button onclick="show('simulator',this)"><span class="tab-num">03.</span>War Room</button>
+    <button onclick="show('tree',this)"><span class="tab-num">04.</span>Game Tree</button>
+    <button onclick="show('bayesian',this)"><span class="tab-num">05.</span>Intel &amp; Bayesian</button>
+  </nav>
+</div>
+
+<div class="layout">
+
+<!-- ═══════════════════════════════ OVERVIEW ═══════════════════════════════ -->
+<div id="sec-overview" class="section visible">
+
+  <div class="sdiv">Mission Brief</div>
+
+  <div class="card">
+    <div class="card-title">Scenario</div>
+    <p>Iran threatens to escalate its nuclear programme unless the USA backs off. Does the threat stick? This model pits four rational actors against each other across three sequential stages — and asks when blackmail is rational, and when it collapses under its own logic.</p>
+    <div class="metric-grid" style="margin-top:1.1rem">
+      <div class="metric"><div class="metric-label">Factions</div><div class="metric-value">4</div><div class="metric-sub">USA &middot; Iran &middot; Energy Bloc &middot; Rival Bloc</div></div>
+      <div class="metric"><div class="metric-label">Stages</div><div class="metric-value">3</div><div class="metric-sub">Threaten &rarr; Respond &rarr; Follow through</div></div>
+      <div class="metric"><div class="metric-label">Iran Types</div><div class="metric-value">2</div><div class="metric-sub">Hard (commits) &middot; Soft (backs down)</div></div>
+    </div>
+  </div>
+
+  <div class="sdiv">The Original Theory — Ellsberg 1968</div>
+
+  <div class="card co">
+    <div class="card-title">The Art of Blackmail &middot; Daniel Ellsberg, RAND 1968</div>
+    <p style="margin-bottom:.9rem">In <em>The Theory and Practice of Blackmail</em>, Daniel Ellsberg — later famous for the Pentagon Papers — formalised coercion as a strategic game. His central argument was deceptively simple: <strong>a threat is only as powerful as its credibility, and most threats are structurally incredible.</strong></p>
+    <div class="callout">
+      <p>The entire art of blackmail lies in making an irrational action appear rational. The blackmailer must convince the victim that punishment will follow non-compliance — even though, rationally, carrying out the punishment is costly and gains nothing once the bluff has been called.</p>
+      <span class="attr">— Daniel Ellsberg, RAND Paper P-3883, 1968</span>
+    </div>
+    <p style="margin-bottom:.85rem">Ellsberg built on Thomas Schelling's earlier work on bargaining and commitment to introduce the concept of <strong>critical risk</strong>: the minimum probability of punishment that a victim must believe exists before they will comply. He showed that:</p>
+
+    <details>
+      <summary>The three-part structure of blackmail</summary>
+      <div class="det-body">
+        <p><strong>1. The demand.</strong> The blackmailer (Iran) announces a threat: comply with my demand, or face punishment. This establishes the coercive claim.</p>
+        <p><strong>2. The credibility problem.</strong> The victim (USA) knows that carrying out the punishment is costly for the blackmailer too. A rational blackmailer would prefer not to follow through. So why believe the threat?</p>
+        <p><strong>3. The critical risk.</strong> USA does not need to be certain Iran will follow through — only sufficiently uncertain. If USA assigns probability p &gt; p* to Iran carrying out the punishment, the expected cost of resisting exceeds the cost of complying. Blackmail works on probability, not certainty.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Ellsberg's four credibility mechanisms</summary>
+      <div class="det-body">
+        <p><strong>Commitment devices</strong> — Delegating the escalation decision to an agent who cannot back down (e.g. a military commander with independent authority) removes the Back Down option entirely, making the threat credible by construction.</p>
+        <p><strong>Reputational stakes</strong> — Publicly staking national honour on following through makes backing down more costly than the punishment itself. Iran's rhetorical commitment to its nuclear programme operates exactly this way.</p>
+        <p><strong>Uncertainty exploitation</strong> — If the victim is genuinely unsure whether the blackmailer's Back Down payoff is positive or negative, the threat gains credibility from ambiguity alone. This is the formal basis of the Bayesian extension in Tab 05.</p>
+        <p><strong>Apparent irrationality</strong> — An actor who appears unpredictable or ideologically driven cannot be modelled as a rational agent, so the victim cannot infer that Back Down is preferred. Perceived irrationality is a strategic asset.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Why this applies to USA–Iran</summary>
+      <div class="det-body">
+        <p>Iran's nuclear programme, its proxy network (Hezbollah, Houthis, Iraqi militias), and its revolutionary ideological framing are all instruments that raise USA's perceived probability p that Iran is the Hard type — willing to carry out punishment even at cost to itself. The formal model in this simulator derives exactly when those instruments succeed in pushing p past the critical risk threshold p* = (3+B)/(4+B), and what role China-Russia backing plays in that calculation.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="sdiv">Core Results</div>
+
+  <div class="two-col">
+    <div class="card cr">
+      <div class="card-title">Prisoner's Dilemma</div>
+      <table class="gt">
+        <tr><th></th><th>Iran: Restrain</th><th>Iran: Escalate</th></tr>
+        <tr><td class="lbl" style="color:var(--text);font-weight:700">USA: Restrain</td><td>(3, 3)</td><td>(1, 4)</td></tr>
+        <tr class="hi"><td class="lbl" style="color:var(--text);font-weight:700">USA: Escalate</td><td>(4, 1)</td><td style="color:var(--red)">(2, 2) &larr; Nash</td></tr>
+      </table>
+      <p style="font-size:14px;color:var(--text3);margin-top:.7rem">Both sides escalate in equilibrium — even though (3,3) beats (2,2). The classic trap.</p>
+    </div>
+    <div class="card cg">
+      <div class="card-title">SPE Result — Perfect Info</div>
+      <div class="cond-row"><div class="cond-dot pass"></div><span><strong>Stage 3:</strong> Iran prefers Back Down (1) over Carry Out (0)</span></div>
+      <div class="cond-row"><div class="cond-dot pass"></div><span><strong>Stage 2:</strong> USA prefers Resist (4) over Comply (1&minus;B)</span></div>
+      <div class="cond-row"><div class="cond-dot pass"></div><span><strong>Stage 1:</strong> Iran prefers Restrain (3+a) over Threaten (1)</span></div>
+      <div class="outcome-banner outcome-coop" style="margin-top:.8rem;margin-bottom:0;font-size:14px">Blackmail unravels &mdash; cooperation is the unique SPE</div>
+    </div>
+  </div>
+
+  <div class="sdiv">The Critical Formula</div>
+
+  <div class="card co">
+    <div class="card-title">Critical Risk Threshold</div>
+    <div class="formula">p* = (3 + B) / (4 + B)</div>
+    <p style="margin-top:.75rem">Under incomplete information, USA will only comply if its belief <strong>p</strong> that Iran is Hard exceeds <strong style="color:var(--gold)">p*</strong>. Blackmail succeeds when <strong style="color:var(--red)">p &gt; p*</strong> AND <strong style="color:var(--red)">B &gt; a&minus;1</strong>. Head to the War Room to test these live.</p>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ FACTIONS ═══════════════════════════════ -->
+<div id="sec-players" class="section">
+
+  <div class="sdiv">Active Factions</div>
+
+  <div class="player-grid">
+    <div class="player-card">
+      <div class="player-card-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#FF5252" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="#FF5252" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="player-faction">Faction 01 &middot; First Mover</div>
+      <div class="player-name">Iran</div>
+      <div class="player-body">Moves first in Stage 1 — Restrain or Threaten. If USA resists, decides in Stage 3 whether to Carry Out or Back Down. Under SPE, always restrains. Under Bayesian extension: Hard type always carries out; Soft type always backs down.</div>
+      <span class="strat sb">DOM: Restrain (SPE)</span>
+    </div>
+    <div class="player-card">
+      <div class="player-card-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#00E5FF" stroke-width="1.5"/><path d="M7 13V8l5 2.5-5 2.5z" stroke="#00E5FF" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="player-faction">Faction 02 &middot; Responder</div>
+      <div class="player-name">USA</div>
+      <div class="player-body">Responds at Stage 2. Under perfect info, Resist dominates (4 &gt; 1&minus;B always). Under incomplete info, complies only if p &gt; p* = (3+B)/(4+B) — weighing the risk of facing a truly committed Iran.</div>
+      <span class="strat sb">DOM: Resist (if p &le; p*)</span>
+    </div>
+    <div class="player-card">
+      <div class="player-card-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#69FF47" stroke-width="1.5"/><path d="M10 5v10M5 10h10" stroke="#69FF47" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+      <div class="player-faction">Faction 03 &middot; Stage 0 Actor</div>
+      <div class="player-name">Energy Bloc</div>
+      <div class="player-body">EU + India. Dependent on regional stability for oil and trade. Support yields (a &minus; c); Neutral yields &minus;a. Support dominates when a &gt; c/2 — always holds. Endogenises parameter <strong style="color:var(--green2)">a</strong>.</div>
+      <span class="strat sg">DOM: Support &rarr; endogenises a</span>
+    </div>
+    <div class="player-card">
+      <div class="player-card-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#FFD740" stroke-width="1.5"/><path d="M6 14l4-8 4 8" stroke="#FFD740" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="player-faction">Faction 04 &middot; Stage 0 Actor</div>
+      <div class="player-name">Rival Bloc</div>
+      <div class="player-body">China + Russia. Benefits when Iran pushes back US influence. Backing yields +B when Iran gains; Neutral yields 0. Dominant across all contingencies. Endogenises parameter <strong style="color:var(--gold)">B</strong>.</div>
+      <span class="strat so">DOM: Back Iran &rarr; endogenises B</span>
+    </div>
+  </div>
+
+  <div class="sdiv">Stage 0 Handoff Logic</div>
+
+  <div class="card co">
+    <div class="card-title">Why Four Factions?</div>
+    <p style="margin-bottom:.95rem">Earlier models treated Energy Bloc and Rival Bloc as passive parameters. This four-player design makes them genuine agents — whose dominant strategies then endogenise a and B before the Iran–USA sequential game begins.</p>
+
+    <div class="toggle-group" id="faction-toggle">
+      <button class="toggle-btn active" onclick="factionTab('both',this)">Both Blocs</button>
+      <button class="toggle-btn" onclick="factionTab('energy',this)">Energy Bloc</button>
+      <button class="toggle-btn" onclick="factionTab('rival',this)">Rival Bloc</button>
+    </div>
+
+    <div id="ft-both">
+      <table class="gt">
+        <tr><th>Faction</th><th>Stage 0 Action</th><th>Effect on Iran–USA Game</th></tr>
+        <tr><td class="lbl" style="color:var(--green2);font-weight:700">Energy Bloc</td><td style="color:var(--green2)">Support</td><td class="lbl">Adds +a to (R,R); subtracts a from (E,E)</td></tr>
+        <tr><td class="lbl" style="color:var(--gold);font-weight:700">Rival Bloc</td><td style="color:var(--gold)">Back Iran</td><td class="lbl">Adds +B to Iran escalation payoffs; &minus;B to USA</td></tr>
+      </table>
+    </div>
+    <div id="ft-energy" style="display:none">
+      <div class="cond-row"><div class="cond-dot pass"></div><span>Strategy: Support (S) vs Neutral (N)</span></div>
+      <div class="cond-row"><div class="cond-dot pass"></div><span>Support yields (a &minus; c); Neutral yields &minus;a</span></div>
+      <div class="cond-row"><div class="cond-dot pass"></div><span>Support dominates when a &gt; c/2 — always satisfied</span></div>
+      <div class="outcome-banner outcome-coop" style="margin-top:.75rem;margin-bottom:0;font-size:14px">Dominant strategy: Support &rarr; endogenises a</div>
+    </div>
+    <div id="ft-rival" style="display:none">
+      <div class="cond-row"><div class="cond-dot pass"></div><span>Strategy: Back Iran (B) vs Neutral (N)</span></div>
+      <div class="cond-row"><div class="cond-dot pass"></div><span>Backing yields +B when Iran gains; Neutral 0</span></div>
+      <div class="cond-row"><div class="cond-dot pass"></div><span>Dominant across all Stage 1 contingencies — holds even on equilibrium paths where Iran never escalates</span></div>
+      <div class="outcome-banner outcome-noatt" style="margin-top:.75rem;margin-bottom:0;font-size:14px">Dominant strategy: Back Iran &rarr; endogenises B</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ WAR ROOM ═══════════════════════════════ -->
+<div id="sec-simulator" class="section">
+
+  <div class="sdiv">War Room &mdash; Live Parameters</div>
+
+  <div class="card">
+    <div class="card-title">Adjust Variables</div>
+    <div class="param-row">
+      <div class="param-label"><span class="pkey">a</span> &nbsp;&mdash; Energy Bloc pressure</div>
+      <input type="range" id="sl-a" min="0" max="4" step="0.1" value="2" oninput="update()">
+      <span class="param-val" id="val-a">2.0</span>
+    </div>
+    <div class="param-row">
+      <div class="param-label"><span class="pkey">B</span> &nbsp;&mdash; Rival Bloc support for Iran</div>
+      <input type="range" id="sl-b" min="0" max="4" step="0.1" value="1.5" oninput="update()">
+      <span class="param-val" id="val-b">1.5</span>
+    </div>
+    <div class="param-row" style="margin-bottom:0">
+      <div class="param-label"><span class="pkey">p</span> &nbsp;&mdash; USA belief Iran is Hard type</div>
+      <input type="range" id="sl-p" min="0" max="1" step="0.01" value="0.5" oninput="update()">
+      <span class="param-val" id="val-p">0.50</span>
+    </div>
+  </div>
+
+  <div id="outcome-banner" class="outcome-banner outcome-coop">&mdash;</div>
+
+  <div class="metric-grid" style="margin-bottom:1rem">
+    <div class="metric"><div class="metric-label">p* (risk threshold)</div><div class="metric-value" id="m-pstar">&mdash;</div><div class="metric-sub">USA compliance cutoff</div></div>
+    <div class="metric"><div class="metric-label">Threat incentive</div><div class="metric-value" id="m-inc">&mdash;</div><div class="metric-sub">B vs a&minus;1</div></div>
+    <div class="metric"><div class="metric-label">Credibility gap</div><div class="metric-value" id="m-gap">&mdash;</div><div class="metric-sub">p &minus; p*</div></div>
+  </div>
+
+  <div class="acc-header open" onclick="toggleAcc('cond-body',this)">
+    <div class="acc-title"><span class="tag-blue acc-tag">LIVE</span>&nbsp; Condition Status</div>
+    <span class="acc-icon open">&#9658;</span>
+  </div>
+  <div id="cond-body" class="acc-body open">
+    <div class="cond-row"><div class="cond-dot" id="dot-pstar"></div><span id="lbl-pstar"></span></div>
+    <div class="cond-row"><div class="cond-dot" id="dot-inc"></div><span id="lbl-inc"></span></div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+      <div id="outcome-detail" style="font-size:15px;color:var(--text2);line-height:1.75"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem" class="two-col">
+    <div class="card co">
+      <div class="card-title">Augmented Payoff Matrix &nbsp;<span style="font-weight:400;font-size:9px">(a=<span id="lbl-a2">2.0</span> &nbsp;B=<span id="lbl-b2">1.5</span>)</span></div>
+      <table class="gt">
+        <tr><th></th><th>Iran: Restrain</th><th>Iran: Escalate</th></tr>
+        <tr><td class="lbl" style="font-weight:700;color:var(--text)">USA: Restrain</td><td id="pm-rr">&mdash;</td><td id="pm-re">&mdash;</td></tr>
+        <tr><td class="lbl" style="font-weight:700;color:var(--text)">USA: Escalate</td><td id="pm-er">&mdash;</td><td id="pm-ee">&mdash;</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">p* Compliance Zone</div>
+      <div style="position:relative">
+        <div class="pbar-track">
+          <div class="pbar-fill" id="pstar-fill" style="width:50%"></div>
+          <div class="pbar-marker" id="pstar-marker" style="left:50%"></div>
+        </div>
+      </div>
+      <div class="pbar-labels"><span>p=0</span><span>p*=<span id="pstar-mid">&mdash;</span></span><span>p=1</span></div>
+      <p style="font-size:14px;color:var(--text3);margin-top:.7rem;line-height:1.6">Red zone = USA complies. Marker = p*. As B rises, the bar moves <strong style="color:var(--text)">right</strong> — Iran needs more perceived resolve, not less.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:.5rem">
+    <div class="acc-header" onclick="toggleAcc('nash-body',this)">
+      <div class="acc-title"><span class="tag-gold acc-tag">TABLE</span>&nbsp; Simultaneous Nash Equilibria of Augmented Game</div>
+      <span class="acc-icon">&#9658;</span>
+    </div>
+    <div id="nash-body" class="acc-body">
+      <table class="gt">
+        <tr><th>NE</th><th>Profile</th><th>Condition (a)</th><th>Condition (B)</th><th>Interpretation</th></tr>
+        <tr><td style="color:var(--text);font-weight:700">NE1</td><td>(R,R)</td><td>a &gt; 1</td><td>B &lt; a&minus;1</td><td class="lbl">Cooperative stability</td></tr>
+        <tr><td style="color:var(--text);font-weight:700">NE2</td><td>(E,E)</td><td>a &lt; 1</td><td>B &gt; a&minus;1</td><td class="lbl">Mutual escalation</td></tr>
+        <tr><td style="color:var(--text);font-weight:700">NE3</td><td>(R,E)</td><td>a &gt; 1</td><td>B &gt; a&minus;1</td><td class="lbl">Iran blackmails USA</td></tr>
+        <tr><td style="color:var(--text);font-weight:700">NE4</td><td>(E,R)</td><td>a &lt; 1</td><td>B &lt; a&minus;1</td><td class="lbl">USA dominates</td></tr>
+      </table>
+    </div>
+
+    <div class="acc-header" onclick="toggleAcc('credmech-body',this)" style="margin-top:5px">
+      <div class="acc-title"><span class="tag-red acc-tag">ELLSBERG</span>&nbsp; Credibility Mechanisms</div>
+      <span class="acc-icon">&#9658;</span>
+    </div>
+    <div id="credmech-body" class="acc-body">
+      <ul class="insight-list">
+        <li><strong>Commitment devices</strong> — Delegating escalation to a party that cannot back down, removing the Back Down option at Stage 3 and making Carry Out credible by construction.</li>
+        <li><strong>Reputational stakes</strong> — Publicly staking national honour, making Back Down more costly (reducing its payoff below 1, potentially below 0).</li>
+        <li><strong>Uncertainty exploitation</strong> — Making USA unsure whether Iran's Back Down payoff is 1 or negative — the formal foundation of the Bayesian extension.</li>
+        <li><strong>Apparent irrationality</strong> — Appearing erratic so USA cannot infer payoffs from rational-actor assumptions, raising perceived probability of Carry Out.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ GAME TREE ═══════════════════════════════ -->
+<div id="sec-tree" class="section">
+
+  <div class="sdiv">Sequential Game Structure &middot; SPE Perfect Information</div>
+
+  <div class="toggle-group" id="tree-toggle">
+    <button class="toggle-btn active" onclick="treeTab('visual',this)">Visual Tree</button>
+    <button class="toggle-btn" onclick="treeTab('induction',this)">Backward Induction</button>
+    <button class="toggle-btn" onclick="treeTab('payoffs',this)">Terminal Payoffs</button>
+  </div>
+
+  <div id="tt-visual">
+    <div class="tree-outer">
+      <svg viewBox="0 0 920 590" width="100%" xmlns="http://www.w3.org/2000/svg" style="max-width:920px;display:block;margin:0 auto">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+        <line x1="82" y1="78"  x2="910" y2="78"  stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,7"/>
+        <line x1="82" y1="172" x2="910" y2="172" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,7"/>
+        <line x1="82" y1="302" x2="910" y2="302" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,7"/>
+        <line x1="82" y1="432" x2="910" y2="432" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,7"/>
+        <line x1="82" y1="525" x2="910" y2="525" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,7"/>
+        <text x="12" y="92"  fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="2" font-family="'Share Tech Mono',monospace">STG 0</text>
+        <text x="12" y="188" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="2" font-family="'Share Tech Mono',monospace">STG 1</text>
+        <text x="12" y="318" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="2" font-family="'Share Tech Mono',monospace">STG 2</text>
+        <text x="12" y="448" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="2" font-family="'Share Tech Mono',monospace">STG 3</text>
+        <text x="12" y="540" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="2" font-family="'Share Tech Mono',monospace">PAY</text>
+        <rect x="120" y="60" width="148" height="34" rx="4" fill="#0c1f14" stroke="#1e6a38" stroke-width="1.5"/>
+        <text x="194" y="77" fill="#69FF47" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1" font-family="'Barlow Condensed',sans-serif">ENERGY BLOC</text>
+        <text x="194" y="90" fill="#00E676" font-size="10" text-anchor="middle" font-family="'Share Tech Mono',monospace">EU + India  ·  +a</text>
+        <rect x="652" y="60" width="148" height="34" rx="4" fill="#1f1800" stroke="#6a5000" stroke-width="1.5"/>
+        <text x="726" y="77" fill="#FFD740" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1" font-family="'Barlow Condensed',sans-serif">RIVAL BLOC</text>
+        <text x="726" y="90" fill="#FFC107" font-size="10" text-anchor="middle" font-family="'Share Tech Mono',monospace">China+Russia  ·  +B</text>
+        <line x1="268" y1="94" x2="438" y2="174" stroke="#1e6a38" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#ah)"/>
+        <text x="318" y="128" fill="#69FF47" font-size="11" text-anchor="middle" font-family="'Share Tech Mono',monospace">Support (+a)</text>
+        <line x1="652" y1="94" x2="478" y2="174" stroke="#6a5000" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#ah)"/>
+        <text x="600" y="128" fill="#FFD740" font-size="11" text-anchor="middle" font-family="'Share Tech Mono',monospace">Back Iran (+B)</text>
+        <circle cx="458" cy="190" r="26" fill="#0a1020" stroke="#00E5FF" stroke-width="2.5"/>
+        <text x="458" y="186" fill="#00E5FF" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1" font-family="'Barlow Condensed',sans-serif">IRAN</text>
+        <text x="458" y="201" fill="#00BCD4" font-size="9" text-anchor="middle" font-family="'Share Tech Mono',monospace">stage 1</text>
+        <line x1="436" y1="209" x2="248" y2="303" stroke="#28405a" stroke-width="2" marker-end="url(#ah)"/>
+        <rect x="282" y="240" width="78" height="20" rx="3" fill="#060810" stroke="#28405a" stroke-width="1"/>
+        <text x="321" y="254" fill="#C8D8F0" font-size="12" font-weight="700" text-anchor="middle" letter-spacing=".5" font-family="'Barlow Condensed',sans-serif">RESTRAIN</text>
+        <line x1="480" y1="209" x2="632" y2="303" stroke="#28405a" stroke-width="2" marker-end="url(#ah)"/>
+        <rect x="572" y="240" width="78" height="20" rx="3" fill="#060810" stroke="#28405a" stroke-width="1"/>
+        <text x="611" y="254" fill="#C8D8F0" font-size="12" font-weight="700" text-anchor="middle" letter-spacing=".5" font-family="'Barlow Condensed',sans-serif">THREATEN</text>
+        <rect x="164" y="306" width="168" height="38" rx="5" fill="#0a1e10" stroke="#2a6a38" stroke-width="1.5"/>
+        <text x="248" y="323" fill="#69FF47" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1" font-family="'Barlow Condensed',sans-serif">TERMINAL</text>
+        <text x="248" y="338" fill="#00E676" font-size="10" text-anchor="middle" font-family="'Share Tech Mono',monospace">Unique SPE outcome</text>
+        <text x="248" y="378" fill="#69FF47" font-size="16" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(3+a, 3+a)</text>
+        <text x="248" y="395" fill="#00E676" font-size="11" text-anchor="middle" font-family="'Share Tech Mono',monospace">Cooperative equilibrium</text>
+        <circle cx="632" cy="320" r="26" fill="#100a22" stroke="#EA80FC" stroke-width="2.5"/>
+        <text x="632" y="316" fill="#EA80FC" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1" font-family="'Barlow Condensed',sans-serif">USA</text>
+        <text x="632" y="331" fill="#CE93D8" font-size="9" text-anchor="middle" font-family="'Share Tech Mono',monospace">stage 2</text>
+        <rect x="662" y="298" width="148" height="18" rx="3" fill="#0a0620" stroke="#3d2080" stroke-width="1"/>
+        <text x="736" y="311" fill="#EA80FC" font-size="9" text-anchor="middle" font-family="'Share Tech Mono',monospace">SPE: RESIST  ·  4 &gt; (1−B)</text>
+        <line x1="610" y1="341" x2="512" y2="432" stroke="#28405a" stroke-width="1.8" marker-end="url(#ah)"/>
+        <rect x="520" y="377" width="64" height="20" rx="3" fill="#060810" stroke="#28405a" stroke-width="1"/>
+        <text x="552" y="391" fill="#C8D8F0" font-size="12" font-weight="700" text-anchor="middle" letter-spacing=".5" font-family="'Barlow Condensed',sans-serif">COMPLY</text>
+        <line x1="654" y1="341" x2="742" y2="432" stroke="#00E5FF" stroke-width="2.5" opacity=".8" marker-end="url(#ah)"/>
+        <rect x="712" y="377" width="62" height="20" rx="3" fill="#060810" stroke="#1e3a5f" stroke-width="1"/>
+        <text x="743" y="391" fill="#00E5FF" font-size="12" font-weight="700" text-anchor="middle" letter-spacing=".5" font-family="'Barlow Condensed',sans-serif">RESIST</text>
+        <rect x="428" y="435" width="168" height="38" rx="5" fill="#1e0808" stroke="#7a2020" stroke-width="1.5"/>
+        <text x="512" y="453" fill="#FF5252" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1" font-family="'Barlow Condensed',sans-serif">BLACKMAIL</text>
+        <text x="512" y="467" fill="#FF8A80" font-size="10" text-anchor="middle" font-family="'Share Tech Mono',monospace">Off SPE path</text>
+        <text x="512" y="503" fill="#FF5252" font-size="16" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(1−B, 4+B)</text>
+        <circle cx="742" cy="452" r="24" fill="#0a1020" stroke="#00E5FF" stroke-width="2"/>
+        <text x="742" y="448" fill="#00E5FF" font-size="13" font-weight="700" text-anchor="middle" letter-spacing="1" font-family="'Barlow Condensed',sans-serif">IRAN</text>
+        <text x="742" y="463" fill="#00BCD4" font-size="9" text-anchor="middle" font-family="'Share Tech Mono',monospace">stage 3</text>
+        <rect x="768" y="433" width="148" height="18" rx="3" fill="#060810" stroke="#1e3a5f" stroke-width="1"/>
+        <text x="842" y="446" fill="#00BCD4" font-size="9" text-anchor="middle" font-family="'Share Tech Mono',monospace">SPE: BACK DOWN  ·  1 &gt; 0</text>
+        <line x1="722" y1="470" x2="662" y2="527" stroke="#28405a" stroke-width="1.8" marker-end="url(#ah)"/>
+        <rect x="644" y="489" width="80" height="20" rx="3" fill="#060810" stroke="#28405a" stroke-width="1"/>
+        <text x="684" y="503" fill="#C8D8F0" font-size="11" font-weight="700" text-anchor="middle" letter-spacing=".3" font-family="'Barlow Condensed',sans-serif">CARRY OUT</text>
+        <line x1="762" y1="470" x2="822" y2="527" stroke="#00E5FF" stroke-width="2.5" opacity=".8" marker-end="url(#ah)"/>
+        <rect x="798" y="489" width="80" height="20" rx="3" fill="#060810" stroke="#1e3a5f" stroke-width="1"/>
+        <text x="838" y="503" fill="#00E5FF" font-size="11" font-weight="700" text-anchor="middle" letter-spacing=".3" font-family="'Barlow Condensed',sans-serif">BACK DOWN</text>
+        <rect x="600" y="530" width="124" height="26" rx="4" fill="#1e0808" stroke="#5a1818" stroke-width="1"/>
+        <text x="662" y="547" fill="#FF5252" font-size="14" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(−B, 0)</text>
+        <rect x="758" y="530" width="124" height="26" rx="4" fill="#0a1e10" stroke="#2a6a38" stroke-width="1"/>
+        <text x="820" y="547" fill="#69FF47" font-size="14" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(4, 1)</text>
+        <rect x="88" y="560" width="400" height="22" rx="4" fill="rgba(0,229,255,.06)" stroke="rgba(0,229,255,.2)" stroke-width="1"/>
+        <text x="288" y="575" fill="#00E5FF" font-size="9" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace" letter-spacing="1.2">SPE PATH: IRAN RESTRAINS → (3+a, 3+a) · BLACKMAIL UNRAVELS</text>
+      </svg>
+    </div>
+  </div>
+
+  <div id="tt-induction" style="display:none">
+    <div class="card cg">
+      <div class="card-title">Backward Induction &mdash; Step by Step</div>
+      <table class="gt">
+        <tr><th>#</th><th>Node</th><th>Options</th><th>SPE Choice</th></tr>
+        <tr><td style="color:var(--text);font-weight:700">1</td><td class="lbl">Iran — Stage 3</td><td class="lbl">Carry Out (0) vs Back Down (1)</td><td style="color:var(--green2);font-weight:700">Back Down</td></tr>
+        <tr><td style="color:var(--text);font-weight:700">2</td><td class="lbl">USA — Stage 2</td><td class="lbl">Comply (1&minus;B) vs Resist (4)</td><td style="color:var(--green2);font-weight:700">Resist</td></tr>
+        <tr><td style="color:var(--text);font-weight:700">3</td><td class="lbl">Iran — Stage 1</td><td class="lbl">Restrain (3+a) vs Threaten (1)</td><td style="color:var(--green2);font-weight:700">Restrain</td></tr>
+      </table>
+      <p style="font-size:15px;color:var(--text3);margin-top:.85rem;line-height:1.7">Under perfect information, the threat unravels completely. Iran knows USA will resist, so threatening yields only payoff 1 — worse than the cooperative payoff 3+a. Iran never threatens.</p>
+    </div>
+  </div>
+
+  <div id="tt-payoffs" style="display:none">
+    <div class="card">
+      <div class="card-title">Terminal Payoff Log</div>
+      <table class="gt">
+        <tr><th>Path</th><th>USA</th><th>Iran</th><th>Description</th></tr>
+        <tr class="hi"><td class="lbl">Iran restrains</td><td>3+a</td><td>3+a</td><td class="lbl">SPE outcome — cooperation</td></tr>
+        <tr><td class="lbl">Threaten &rarr; Comply</td><td>1&minus;B</td><td>4+B</td><td class="lbl">Blackmail succeeds (off SPE)</td></tr>
+        <tr><td class="lbl">Threaten &rarr; Resist &rarr; Carry Out</td><td>&minus;B</td><td>0</td><td class="lbl">Mutual destruction</td></tr>
+        <tr><td class="lbl">Threaten &rarr; Resist &rarr; Back Down</td><td>4</td><td>1</td><td class="lbl">USA calls the bluff</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ BAYESIAN ═══════════════════════════════ -->
+<div id="sec-bayesian" class="section">
+
+  <div class="sdiv">Intel Assessment &mdash; Incomplete Information</div>
+
+  <div class="type-grid">
+    <div class="type-card" style="border-color:rgba(255,82,82,.45)">
+      <h4 style="color:var(--red)">Type H &mdash; Hard Iran</h4>
+      <p>Ideologically committed. Backing down is humiliating — payoff &minus;k (k &gt; 0). So Type H <strong>always carries out</strong> its threat if USA resists. Dominant strategy: Carry Out.</p>
+    </div>
+    <div class="type-card" style="border-color:rgba(0,230,118,.45)">
+      <h4 style="color:var(--green2)">Type S &mdash; Soft Iran</h4>
+      <p>Rational and cost-conscious. Back Down yields 1, Carry Out yields 0. So Type S <strong>always backs down</strong> if USA resists. This is the SPE type. Dominant strategy: Back Down.</p>
+    </div>
+  </div>
+
+  <div class="card co">
+    <div class="card-title">USA's Expected Payoff from Resist</div>
+    <div class="formula">E[Resist] = p(&minus;B) + (1&minus;p)(4) = 4 &minus; p(4 + B)</div>
+    <p style="margin-top:.7rem">USA complies when E[Resist] &lt; Comply, i.e. when <strong style="color:var(--gold)">p &gt; (3+B)/(4+B) = p*</strong>.</p>
+  </div>
+
+  <div class="sdiv">Bayesian Game Tree</div>
+
+  <div class="toggle-group" id="btree-toggle">
+    <button class="toggle-btn active" onclick="btreeTab('visual',this)">Visual Tree</button>
+    <button class="toggle-btn" onclick="btreeTab('pbe',this)">PBE Regions</button>
+    <button class="toggle-btn" onclick="btreeTab('insights',this)">Key Insights</button>
+  </div>
+
+  <!-- BAYESIAN TREE — completely redrawn on a 1100×720 canvas with generous spacing -->
+  <div id="bt-visual">
+    <div class="tree-outer">
+      <svg viewBox="0 0 1100 720" width="100%" xmlns="http://www.w3.org/2000/svg" style="max-width:1100px;display:block;margin:0 auto">
+        <defs>
+          <marker id="ah3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- Stage bands -->
+        <line x1="80" y1="58"  x2="1090" y2="58"  stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,8"/>
+        <line x1="80" y1="168" x2="1090" y2="168" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,8"/>
+        <line x1="80" y1="308" x2="1090" y2="308" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,8"/>
+        <line x1="80" y1="458" x2="1090" y2="458" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,8"/>
+        <line x1="80" y1="580" x2="1090" y2="580" stroke="#1e2d42" stroke-width="1" stroke-dasharray="4,8"/>
+
+        <text x="6" y="73"  fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="1.5" font-family="'Share Tech Mono',monospace">NAT</text>
+        <text x="6" y="183" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="1.5" font-family="'Share Tech Mono',monospace">STG1</text>
+        <text x="6" y="323" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="1.5" font-family="'Share Tech Mono',monospace">STG2</text>
+        <text x="6" y="473" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="1.5" font-family="'Share Tech Mono',monospace">STG3</text>
+        <text x="6" y="595" fill="#4a6a88" font-size="9" font-weight="700" letter-spacing="1.5" font-family="'Share Tech Mono',monospace">PAY</text>
+
+        <!-- NATURE (diamond) centred at x=550 y=35 -->
+        <polygon points="550,12 582,38 550,64 518,38" fill="#0d1828" stroke="#FFD740" stroke-width="2.5"/>
+        <text x="550" y="34" fill="#FFD740" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">NATURE</text>
+        <text x="550" y="50" fill="#FFC107" font-size="9" text-anchor="middle" font-family="'Share Tech Mono',monospace">draws type</text>
+
+        <!-- Nature → Hard (left branch) to x=240, y=155 -->
+        <line x1="520" y1="56" x2="258" y2="153" stroke="#FF5252" stroke-width="2" marker-end="url(#ah3)"/>
+        <rect x="322" y="88" width="88" height="22" rx="3" fill="#060810" stroke="#7a2020" stroke-width="1"/>
+        <text x="366" y="103" fill="#FF8A80" font-size="11" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">Prob  p</text>
+
+        <!-- Nature → Soft (right branch) to x=860, y=155 -->
+        <line x1="580" y1="56" x2="842" y2="153" stroke="#00E676" stroke-width="2" marker-end="url(#ah3)"/>
+        <rect x="680" y="88" width="104" height="22" rx="3" fill="#060810" stroke="#0f5530" stroke-width="1"/>
+        <text x="732" y="103" fill="#69FF47" font-size="11" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">Prob  1−p</text>
+
+        <!-- Hard Iran node: circle at 240,170 -->
+        <circle cx="240" cy="170" r="26" fill="#1e0808" stroke="#FF5252" stroke-width="2.5"/>
+        <text x="240" y="166" fill="#FF5252" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">IRAN H</text>
+        <text x="240" y="181" fill="#FF8A80" font-size="9"  text-anchor="middle" font-family="'Share Tech Mono',monospace">hard type</text>
+
+        <!-- Soft Iran node: circle at 860,170 -->
+        <circle cx="860" cy="170" r="26" fill="#0a1e10" stroke="#00E676" stroke-width="2.5"/>
+        <text x="860" y="166" fill="#69FF47" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">IRAN S</text>
+        <text x="860" y="181" fill="#00E676" font-size="9"  text-anchor="middle" font-family="'Share Tech Mono',monospace">soft type</text>
+
+        <!-- Hard → Restrain (left): terminal at x=115, y=295 -->
+        <line x1="218" y1="188" x2="120" y2="280" stroke="#28405a" stroke-width="1.8" marker-end="url(#ah3)"/>
+        <rect x="122" y="225" width="78" height="20" rx="3" fill="#060810" stroke="#28405a" stroke-width="1"/>
+        <text x="161" y="239" fill="#C8D8F0" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">RESTRAIN</text>
+        <!-- Hard Restrain payoff -->
+        <rect x="70" y="296" width="110" height="24" rx="4" fill="#0a1e10" stroke="#2a6a38" stroke-width="1"/>
+        <text x="125" y="313" fill="#69FF47" font-size="12" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(3+a, 3+a)</text>
+
+        <!-- Hard → Threaten (right): goes to USA node H at x=380, y=295 -->
+        <line x1="262" y1="188" x2="364" y2="280" stroke="#FF5252" stroke-width="2" marker-end="url(#ah3)"/>
+        <rect x="280" y="225" width="80" height="20" rx="3" fill="#1e0808" stroke="#7a2020" stroke-width="1"/>
+        <text x="320" y="239" fill="#FF8A80" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">THREATEN</text>
+
+        <!-- Soft → Restrain (left): terminal at x=985, y=295 -->
+        <line x1="838" y1="188" x2="940" y2="280" stroke="#00E676" stroke-width="2" marker-end="url(#ah3)"/>
+        <rect x="864" y="225" width="78" height="20" rx="3" fill="#0a1e10" stroke="#0f5530" stroke-width="1"/>
+        <text x="903" y="239" fill="#69FF47" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">RESTRAIN</text>
+        <!-- Soft Restrain payoff -->
+        <rect x="920" y="296" width="110" height="24" rx="4" fill="#0a1e10" stroke="#2a6a38" stroke-width="1"/>
+        <text x="975" y="313" fill="#69FF47" font-size="12" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(3+a, 3+a)</text>
+
+        <!-- Soft → Threaten (left): goes to USA node S at x=720, y=295 -->
+        <line x1="882" y1="188" x2="736" y2="280" stroke="#00E676" stroke-width="2" marker-end="url(#ah3)"/>
+        <rect x="782" y="225" width="80" height="20" rx="3" fill="#0a1e10" stroke="#0f5530" stroke-width="1"/>
+        <text x="822" y="239" fill="#69FF47" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">THREATEN</text>
+
+        <!-- USA node (Hard branch): circle at 380,295 -->
+        <circle cx="380" cy="296" r="24" fill="#100a22" stroke="#EA80FC" stroke-width="2.5"/>
+        <text x="380" y="292" fill="#EA80FC" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">USA</text>
+        <text x="380" y="307" fill="#CE93D8" font-size="9"  text-anchor="middle" font-family="'Share Tech Mono',monospace">stg 2</text>
+
+        <!-- USA node (Soft branch): circle at 720,295 -->
+        <circle cx="720" cy="296" r="24" fill="#100a22" stroke="#EA80FC" stroke-width="2.5"/>
+        <text x="720" y="292" fill="#EA80FC" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">USA</text>
+        <text x="720" y="307" fill="#CE93D8" font-size="9"  text-anchor="middle" font-family="'Share Tech Mono',monospace">stg 2</text>
+
+        <!-- Information set dashed arc between USA nodes -->
+        <line x1="404" y1="296" x2="696" y2="296" stroke="#EA80FC" stroke-width="1.5" stroke-dasharray="7,5"/>
+        <!-- INFO SET label centred on the dashed line -->
+        <rect x="498" y="284" width="104" height="24" rx="4" fill="#0e0820" stroke="#5a30aa" stroke-width="1.5"/>
+        <text x="550" y="300" fill="#EA80FC" font-size="10" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">INFO SET</text>
+
+        <!-- USA Hard → Comply: terminal at x=268, y=445 -->
+        <line x1="360" y1="315" x2="278" y2="435" stroke="#28405a" stroke-width="1.8" marker-end="url(#ah3)"/>
+        <rect x="270" y="368" width="64" height="20" rx="3" fill="#060810" stroke="#28405a" stroke-width="1"/>
+        <text x="302" y="382" fill="#C8D8F0" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">COMPLY</text>
+        <!-- Hard Comply payoff -->
+        <rect x="208" y="446" width="130" height="24" rx="4" fill="#1e0808" stroke="#7a2020" stroke-width="1.5"/>
+        <text x="273" y="462" fill="#FF5252" font-size="13" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(1−B, 4+B)</text>
+
+        <!-- USA Hard → Resist: goes to Iran H stage3 at x=490, y=445 -->
+        <line x1="400" y1="315" x2="474" y2="435" stroke="#00E5FF" stroke-width="2" opacity=".8" marker-end="url(#ah3)"/>
+        <rect x="418" y="368" width="58" height="20" rx="3" fill="#060810" stroke="#1e3a5f" stroke-width="1"/>
+        <text x="447" y="382" fill="#00E5FF" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">RESIST</text>
+
+        <!-- USA Soft → Comply: terminal at x=830, y=445 -->
+        <line x1="700" y1="315" x2="622" y2="435" stroke="#28405a" stroke-width="1.8" marker-end="url(#ah3)"/>
+        <rect x="618" y="368" width="64" height="20" rx="3" fill="#060810" stroke="#28405a" stroke-width="1"/>
+        <text x="650" y="382" fill="#C8D8F0" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">COMPLY</text>
+        <!-- Soft Comply payoff -->
+        <rect x="560" y="446" width="130" height="24" rx="4" fill="#1e0808" stroke="#7a2020" stroke-width="1.5"/>
+        <text x="625" y="462" fill="#FF5252" font-size="13" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(1−B, 4+B)</text>
+
+        <!-- USA Soft → Resist: goes to Iran S stage3 at x=840, y=445 -->
+        <line x1="740" y1="315" x2="824" y2="435" stroke="#00E5FF" stroke-width="2" opacity=".8" marker-end="url(#ah3)"/>
+        <rect x="762" y="368" width="58" height="20" rx="3" fill="#060810" stroke="#1e3a5f" stroke-width="1"/>
+        <text x="791" y="382" fill="#00E5FF" font-size="12" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">RESIST</text>
+
+        <!-- Iran H Stage 3 node at x=490, y=450 -->
+        <circle cx="490" cy="452" r="22" fill="#1e0808" stroke="#FF5252" stroke-width="2"/>
+        <text x="490" y="448" fill="#FF5252" font-size="11" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">IRAN H</text>
+        <text x="490" y="462" fill="#FF8A80" font-size="8"  text-anchor="middle" font-family="'Share Tech Mono',monospace">stg 3</text>
+
+        <!-- Iran S Stage 3 node at x=840, y=450 -->
+        <circle cx="840" cy="452" r="22" fill="#0a1e10" stroke="#00E676" stroke-width="2"/>
+        <text x="840" y="448" fill="#69FF47" font-size="11" font-weight="700" text-anchor="middle" font-family="'Barlow Condensed',sans-serif">IRAN S</text>
+        <text x="840" y="462" fill="#00E676" font-size="8"  text-anchor="middle" font-family="'Share Tech Mono',monospace">stg 3</text>
+
+        <!-- Hard H → Carry Out (dominant, bold red): to x=406, y=568 -->
+        <line x1="472" y1="470" x2="416" y2="562" stroke="#FF5252" stroke-width="3" marker-end="url(#ah3)"/>
+        <rect x="398" y="507" width="80" height="20" rx="3" fill="#1e0808" stroke="#7a2020" stroke-width="1"/>
+        <text x="438" y="521" fill="#FF5252" font-size="11" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">CARRY OUT</text>
+
+        <!-- Hard H → Back Down (dominated, faint): to x=554, y=568 -->
+        <line x1="508" y1="470" x2="550" y2="562" stroke="#3a5572" stroke-width="1" stroke-dasharray="4,4" opacity=".4" marker-end="url(#ah3)"/>
+        <rect x="508" y="507" width="76" height="20" rx="3" fill="#060810" stroke="#1e2d42" stroke-width="1" opacity=".4"/>
+        <text x="546" y="521" fill="#3a5572" font-size="10" font-weight="600" text-anchor="middle" font-family="'Share Tech Mono',monospace" opacity=".5">BACK DOWN</text>
+
+        <!-- Hard payoffs row -->
+        <rect x="354" y="568" width="108" height="26" rx="4" fill="#1e0808" stroke="#5a1818" stroke-width="1"/>
+        <text x="408" y="585" fill="#FF5252" font-size="13" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(−B, 0)</text>
+        <rect x="496" y="568" width="108" height="26" rx="4" fill="#060810" stroke="#1e2d42" stroke-width="1" opacity=".38"/>
+        <text x="550" y="585" fill="#3a5572" font-size="13" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace" opacity=".45">(4, −k)</text>
+
+        <!-- Soft S → Back Down (dominant, bold green): to x=836, y=568 -->
+        <line x1="840" y1="470" x2="840" y2="562" stroke="#00E676" stroke-width="3" marker-end="url(#ah3)"/>
+        <rect x="804" y="507" width="80" height="20" rx="3" fill="#0a1e10" stroke="#2a6a38" stroke-width="1"/>
+        <text x="844" y="521" fill="#69FF47" font-size="11" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">BACK DOWN</text>
+
+        <!-- Soft S → Carry Out (dominated, faint): to x=748, y=568 -->
+        <line x1="822" y1="470" x2="758" y2="562" stroke="#3a5572" stroke-width="1" stroke-dasharray="4,4" opacity=".4" marker-end="url(#ah3)"/>
+        <rect x="736" y="507" width="76" height="20" rx="3" fill="#060810" stroke="#1e2d42" stroke-width="1" opacity=".4"/>
+        <text x="774" y="521" fill="#3a5572" font-size="10" font-weight="600" text-anchor="middle" font-family="'Share Tech Mono',monospace" opacity=".5">CARRY OUT</text>
+
+        <!-- Soft payoffs row -->
+        <rect x="694" y="568" width="108" height="26" rx="4" fill="#060810" stroke="#1e2d42" stroke-width="1" opacity=".38"/>
+        <text x="748" y="585" fill="#3a5572" font-size="13" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace" opacity=".45">(−B, 0)</text>
+        <rect x="788" y="568" width="108" height="26" rx="4" fill="#0a1e10" stroke="#2a6a38" stroke-width="1"/>
+        <text x="842" y="585" fill="#69FF47" font-size="13" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace">(4, 1)</text>
+
+        <!-- Legend bar at bottom -->
+        <rect x="80" y="650" width="210" height="22" rx="3" fill="rgba(234,128,252,.07)" stroke="rgba(234,128,252,.25)" stroke-width="1"/>
+        <text x="185" y="665" fill="#EA80FC" font-size="9" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace" letter-spacing=".8">DASHED = INFORMATION SET</text>
+        <rect x="302" y="650" width="200" height="22" rx="3" fill="rgba(255,82,82,.07)" stroke="rgba(255,82,82,.25)" stroke-width="1"/>
+        <text x="402" y="665" fill="#FF8A80" font-size="9" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace" letter-spacing=".8">BOLD = DOMINANT STRATEGY</text>
+        <rect x="514" y="650" width="210" height="22" rx="3" fill="rgba(0,230,118,.07)" stroke="rgba(0,230,118,.25)" stroke-width="1"/>
+        <text x="619" y="665" fill="#00E676" font-size="9" font-weight="700" text-anchor="middle" font-family="'Share Tech Mono',monospace" letter-spacing=".8">FAINT = DOMINATED STRATEGY</text>
+      </svg>
+    </div>
+  </div>
+
+  <div id="bt-pbe" style="display:none">
+    <div class="card">
+      <div class="card-title">PBE &mdash; Four Equilibrium Regions</div>
+      <table class="gt">
+        <tr><th>Region</th><th>Equilibrium Path</th><th>Outcome</th></tr>
+        <tr><td class="lbl">p &lt; p*</td><td class="lbl">Both types restrain</td><td style="color:var(--green2)">Cooperation (3+a, 3+a)</td></tr>
+        <tr><td class="lbl">p = p*</td><td class="lbl">USA indifferent; any mix consistent</td><td style="color:var(--amber2)">Knife-edge, indeterminate</td></tr>
+        <tr><td class="lbl">p &gt; p* and B &gt; a&minus;1</td><td class="lbl">Both types threaten; USA complies</td><td style="color:var(--red)">Blackmail succeeds (1&minus;B, 4+B)</td></tr>
+        <tr><td class="lbl">p &gt; p* and B &le; a&minus;1</td><td class="lbl">Both types restrain despite compliance willingness</td><td style="color:var(--green2)">Cooperation; incentive absent</td></tr>
+      </table>
+      <p style="font-size:14px;color:var(--text3);margin-top:.85rem;line-height:1.65">where p* = (3 + B) / (4 + B). When Iran threatens in equilibrium, both types send the same threat — a pooling equilibrium. Bayes' rule cannot update USA's beliefs, so beliefs remain at prior p. Off-path (Case A), PBE is supported by any off-path belief p' &lt; p*.</p>
+    </div>
+  </div>
+
+  <div id="bt-insights" style="display:none">
+    <div class="card cp">
+      <div class="card-title">Key Intel</div>
+      <ul class="insight-list">
+        <li><strong>B increases p*, raising the credibility bar.</strong> p* = (3+B)/(4+B) is strictly increasing in B. Higher rival bloc support raises the threshold USA needs before complying — Iran must project more resolve as B grows, not less.</li>
+        <li><strong>Two joint conditions required.</strong> Blackmail succeeds only when p &gt; p* (credibility) AND B &gt; a&minus;1 (incentive). Meeting one alone is not enough.</li>
+        <li><strong>a and B play structurally different roles.</strong> B sets the credibility threshold p*. a sets Iran's incentive to threaten at all. They operate through separate channels.</li>
+        <li><strong>SPE is the p = 0 special case.</strong> When USA is certain Iran is Soft (p = 0), we recover the perfect-information cooperation result exactly.</li>
+        <li><strong>Off-path beliefs (Case A).</strong> When both types restrain, a threat is off the equilibrium path. The PBE is supported by any off-path belief p' &lt; p* — Bayes' rule leaves these unconstrained.</li>
+        <li><strong>Real-world credibility tools.</strong> Iran's nuclear programme, proxy networks, and ideological framing raise USA's posterior belief p toward p*. They are the formal equivalent of Ellsberg's credibility mechanisms.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /layout -->
+
+<div class="footer">
+  DEFCON: THE BLACKMAIL GAME &nbsp;&middot;&nbsp; <strong>SCHELLBY SYNDICATE</strong> &nbsp;&middot;&nbsp; GAME THEORY PROJECT &nbsp;&middot;&nbsp; ELLSBERG 1968 &nbsp;&middot;&nbsp; ALL PAYOFFS RATIONAL
+</div>
+
+<script>
+function show(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('visible'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('visible');
+  if(btn)btn.classList.add('active');
+}
+function toggleAcc(bodyId,header){
+  const body=document.getElementById(bodyId);
+  const icon=header.querySelector('.acc-icon');
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  body.style.display=isOpen?'none':'block';
+  icon.classList.toggle('open',!isOpen);
+  header.classList.toggle('open',!isOpen);
+}
+function factionTab(id,btn){
+  ['both','energy','rival'].forEach(k=>{const el=document.getElementById('ft-'+k);if(el)el.style.display=k===id?'block':'none';});
+  document.querySelectorAll('#faction-toggle .toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function treeTab(id,btn){
+  ['visual','induction','payoffs'].forEach(k=>{const el=document.getElementById('tt-'+k);if(el)el.style.display=k===id?'block':'none';});
+  document.querySelectorAll('#tree-toggle .toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function btreeTab(id,btn){
+  ['visual','pbe','insights'].forEach(k=>{const el=document.getElementById('bt-'+k);if(el)el.style.display=k===id?'block':'none';});
+  document.querySelectorAll('#btree-toggle .toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function fmt(n){return(Math.round(n*100)/100).toFixed(2)}
+function fmtP(n){return n.toFixed(2)}
+function update(){
+  const a=parseFloat(document.getElementById('sl-a').value);
+  const B=parseFloat(document.getElementById('sl-b').value);
+  const p=parseFloat(document.getElementById('sl-p').value);
+  document.getElementById('val-a').textContent=a.toFixed(1);
+  document.getElementById('val-b').textContent=B.toFixed(1);
+  document.getElementById('val-p').textContent=p.toFixed(2);
+  document.getElementById('lbl-a2').textContent=a.toFixed(1);
+  document.getElementById('lbl-b2').textContent=B.toFixed(1);
+  const pstar=(3+B)/(4+B);
+  const incCond=B>(a-1);
+  const credCond=p>pstar;
+  const ps=fmtP(pstar);
+  document.getElementById('m-pstar').textContent=ps;
+  document.getElementById('m-inc').textContent=incCond?'MET':'FAIL';
+  const gap=p-pstar;
+  document.getElementById('m-gap').textContent=(gap>=0?'+':'')+fmtP(gap);
+  document.getElementById('threat-index').textContent=ps;
+  document.getElementById('dot-pstar').className='cond-dot '+(credCond?'pass':'fail');
+  document.getElementById('dot-inc').className='cond-dot '+(incCond?'pass':'fail');
+  document.getElementById('lbl-pstar').textContent='Credibility: p ('+p.toFixed(2)+') '+(credCond?'>':'≤')+' p* ('+ps+') — '+(credCond?'MET':'NOT MET');
+  document.getElementById('lbl-inc').textContent='Incentive: B ('+B.toFixed(1)+') '+(incCond?'>':'≤')+' a−1 ('+(a-1).toFixed(1)+') — '+(incCond?'MET':'NOT MET');
+  const banner=document.getElementById('outcome-banner');
+  const detail=document.getElementById('outcome-detail');
+  let cls,txt,dtxt;
+  if(credCond&&incCond){
+    cls='outcome-black';txt='BLACKMAIL SUCCEEDS — BOTH CONDITIONS MET';
+    dtxt='Both types of Iran threaten. USA, believing it faces a Hard Iran with probability '+p.toFixed(2)+' > p* = '+ps+', prefers to comply. Iran extracts concessions. Payoffs: USA gets '+fmt(1-B)+', Iran gets '+fmt(4+B)+'.';
+  } else if(!credCond&&!incCond){
+    cls='outcome-coop';txt='COOPERATION — NEITHER CONDITION MET';
+    dtxt='Iran lacks both the incentive to threaten (B ≤ a−1) and the credibility to coerce (p ≤ p*). Both types restrain. Cooperative payoffs: ('+fmt(3+a)+', '+fmt(3+a)+').';
+  } else if(credCond&&!incCond){
+    cls='outcome-noatt';txt='COOPERATION — CREDIBILITY MET, INCENTIVE ABSENT';
+    dtxt='USA would comply if threatened (p > p*), but Iran prefers restraint: blackmail payoff 4+B = '+fmt(4+B)+' does not exceed cooperative payoff 3+a = '+fmt(3+a)+'. Iran does not threaten.';
+  } else {
+    cls='outcome-coop';txt='COOPERATION — INCENTIVE EXISTS, CREDIBILITY TOO LOW';
+    dtxt='Iran would gain from successful blackmail (B > a−1), but USA will not comply: p = '+p.toFixed(2)+' < p* = '+ps+'. USA resists, Iran backs down, Iran gets only 1 < '+fmt(3+a)+'. Iran refrains.';
+  }
+  banner.className='outcome-banner '+cls;
+  banner.textContent=txt;
+  detail.textContent=dtxt;
+  document.getElementById('pm-rr').textContent='('+fmt(3+a)+', '+fmt(3+a)+')';
+  document.getElementById('pm-re').textContent='('+fmt(1-B)+', '+fmt(4+B)+')';
+  document.getElementById('pm-er').textContent='(4, 1)';
+  document.getElementById('pm-ee').textContent='('+fmt(2-a-B)+', '+fmt(2-a+B)+')';
+  document.getElementById('pstar-fill').style.width=(pstar*100).toFixed(1)+'%';
+  document.getElementById('pstar-marker').style.left=(pstar*100).toFixed(1)+'%';
+  document.getElementById('pstar-mid').textContent=ps;
+}
+update();
+</script>
+</body>
+</html>
